@@ -1,0 +1,39 @@
+
+###
+POST  http://localhost:3000/api/obras
+Content-Type: application/json
+
+{
+    "nombre": "El grito",
+    "descripcion": "Pintura",
+    "fecha": "2022-01-01",
+    "precio": "123456",
+    "idartista": "1",
+    "imagen_url": "https://media.admagazine.com/photos/618a6acbcc7069ed5077ca7f/master/w_1600%2Cc_limit/68704.jpg"
+}
+###
+
+GET http://localhost:3000/api/obras
+
+### 
+PUT http://localhost:3000/api/obras/1
+Content-Type: application/json
+
+{
+    "idobra": 1,
+    "nombre": "Los girasoles",
+    "descripcion": "Pintura",
+    "fecha": "2022-01-01",
+    "precio": "123456",
+    "idartista": "10"
+}
+
+###
+GET http://localhost:3000/api/obras/idartista/1
+
+###
+GET http://localhost:3000/api/obras/graficaobras
+
+###
+GET http://localhost:3000/api/obras/nombre/Obra1
+

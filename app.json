@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "MiAciona",
+    "slug": "MiAcciona",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "scheme": "miacciona",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.anonymous.MiAcciona"
+    },
+    "plugins": [
+      "expo-asset",
+      "react-native-edge-to-edge"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4b1a2723-fc9c-4ba3-b1a7-59c991e9e4dd"
+      }
+    }
+  }
+}

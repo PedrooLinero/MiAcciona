@@ -1,0 +1,36 @@
+###
+POST http://localhost:3000/api/artistas
+Content-Type: application/json
+
+{
+    "nombre": "Leonardo Da Vinci",
+    "apellidos": "Pintor",
+    "fechaNacimiento": "2022-01-01",
+    "tipoArte": "creativo",
+    "paisDeNacimiento": "Italia"
+}
+
+###
+GET http://localhost:3000/api/artistas
+
+###
+PUT http://localhost:3000/api/artistas/1
+Content-Type: application/json
+
+{
+    "idartista": 1,
+    "nombre": "Perito",
+    "apellidos": "Pintor",
+    "fechaNacimiento": "2022-01-01",
+    "tipoArte": "creativo",
+    "paisDeNacimiento": "España"
+}
+
+###
+DELETE http://localhost:3000/api/artistas/1
+
+###
+GET http://localhost:3000/api/artistas/tipoArte/contemporaneo
+
+###
+GET http://localhost:3000/api/artistas/nombre/Artista9
