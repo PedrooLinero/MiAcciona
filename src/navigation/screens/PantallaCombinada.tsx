@@ -18,7 +18,6 @@ import { StyleSheet } from "react-native";
 import { Box, set, Text } from "@gluestack-ui/themed";
 import { Audio } from "expo-av";
 
-
 function PantallaCombinada() {
   const [modalVisible, setModalVisible] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -220,12 +219,12 @@ function PantallaCombinada() {
               />
               {/* Mostrar nombre y apellido del usuario si está logueado */}
               {userData && (
-                <Appbar.Content
-                  title={`${userData.nombre} ${userData.primer_apellido}`}
-                  titleStyle={styles.userTitle}
-                />
+                <View style={styles.userContainer}>
+                  <Text style={styles.userTitle}>
+                    {`${userData.nombre} ${userData.primer_apellido}`}
+                  </Text>
+                </View>
               )}
-
               <Appbar.Action icon="account" color="white" />
             </Appbar.Header>
 
@@ -438,18 +437,21 @@ const styles = StyleSheet.create({
   },
   appbar: {
     backgroundColor: "#D50032",
+    flexDirection: "row", // Asegurar que los elementos se distribuyan en una fila
+    alignItems: "center", // Centrar verticalmente
   },
   appbarTitle: {
     marginLeft: 10,
-    fontSize: 18,
-    fontWeight: "600",
-    color: "white",
+  },
+  userTitleContainer: {
+    flex: 0, // Reducir el espacio que ocupa este componente
+    marginRight: 5, // Reducir el espacio entre el nombre y el ícono
   },
   userTitle: {
     fontSize: 16,
     fontWeight: "500",
     color: "white",
-    marginLeft: 10,
+    textAlign: "right", // Alinear el texto a la derecha
   },
   menuItem: {
     paddingVertical: 10,
@@ -490,7 +492,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "white",
   },
-
+  userContainer: {
+    flex: 1, // Permitir que el contenedor del nombre ocupe el espacio disponible
+    flexDirection: "row",
+    justifyContent: "flex-end", // Alinear el nombre a la derecha
+    marginRight: 5, // Espacio pequeño entre el nombre y el ícono
+  },
   snackbar: {
     backgroundColor: "#D50032",
     color: "white",
