@@ -7,3 +7,13 @@ Content-Type: application/json
     "nif": "12345678Z",
     "password": "12345678Z"
 }
+
+### Cerrar sesión OK con usuario existente y role user
+
+POST http://localhost:3000/api/logout
+Content-Type: application/json
+
+{
+    "nif": "12345678Z",
+    "password": "12345678Z"
+}

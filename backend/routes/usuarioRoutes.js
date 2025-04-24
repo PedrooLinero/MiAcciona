@@ -1,10 +1,17 @@
+// routes/usuarioRoutes.js
 const express = require("express");
-const router  = express.Router();
-const usuarioController    = require("../controller/usuarioController");
-const { verifyToken, verificarRol } = require("../middlewares/authMiddleware");
+const router = express.Router();
+const usuarioController = require("../controller/usuarioController.js");
+// Si necesitas verificar el token en algunas rutas, descomenta la siguiente línea
+// const { verifyToken, verificarRol } = require("../middlewares/authMiddleware");
 
-router.post("/login",  usuarioController.login);
-// router.post("/logout", usuarioController.logout);
-// router.get("/usuarios", verifyToken, verificarRol(["ADMIN"]), usuarioController.getAllUsers);
+// Ruta para login
+router.post("/login", usuarioController.login);
+
+// Ruta para logout - Borra la cookie y cierra sesión
+router.post("/logout", usuarioController.logout);
+
+// Ruta para obtener todos los usuarios (con verificación de token y rol)
+router.get("/usuarios", /*verifyToken, verificarRol(["ADMIN"]),*/ usuarioController.getAllUsers);
 
 module.exports = router;

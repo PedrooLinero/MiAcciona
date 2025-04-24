@@ -423,19 +423,26 @@ import {
   View,
   Alert,
 } from "react-native";
-import { Appbar, Button } from "react-native-paper";
+import { Appbar, Button, Snackbar } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet } from "react-native";
-import { Box, Text } from "@gluestack-ui/themed";
+import { Box, set, Text } from "@gluestack-ui/themed";
+import { Audio } from "expo-av";
 
 function PantallaCombinada() {
   const [modalVisible, setModalVisible] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(-250)).current;
+
+  const windowWidth = Dimensions.get("window").width;
+
+  const [userData, setUserData] = useState<UserData | null>(null); // Tipo especificado aquí
   const [nif, setNif] = useState("");
   const [password, setPassword] = useState(""); // <-- Añade esto
-  const windowWidth = Dimensions.get("window").width;
-  const [userData, setUserData] = useState<UserData | null>(null); // Tipo especificado aquí
+
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
 
   interface UserData {
     id: number;
@@ -444,6 +451,23 @@ function PantallaCombinada() {
     rol: string;
     token?: string; // opcional si también lo estás guardando en el estado
   }
+
+  // Función para cargar y reproducir sonido
+  const playWelcomeSound = async () => {
+    const { sound } = await Audio.Sound.createAsync(
+      require("../../assets/sound/sonidoMensaje.mp3")
+    );
+    setSound(sound);
+    await sound.playAsync();
+  };
+
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
 
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);
@@ -455,47 +479,60 @@ function PantallaCombinada() {
   };
 
   const handleLogin = async () => {
-    console.log("🟠 Login pulsado");
-
     if (!nif || !password) {
-      Alert.alert("Error", "Debes ingresar tu NIF y contraseña");
-      return;
+      return Alert.alert("Error", "Debes ingresar tu NIF y contraseña");
     }
-
     try {
       const resp = await fetch("http://localhost:3000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nif, password }),
       });
-
       const data = await resp.json();
-      console.log("🔵 Respuesta:", data);
-
       if (resp.ok) {
+        // Guardar ID en AsyncStorage
         await AsyncStorage.setItem("usuarioId", data.datos.id.toString());
+        // Ocultar modal y guardar datos
         setModalVisible(false);
         setUserData({
           id: data.datos.id,
-          nombre: data.datos.nombre, // Nombre recibido del backend
-          primer_apellido: data.datos.primer_apellido, // Primer apellido recibido del backend
+          nombre: data.datos.nombre,
+          primer_apellido: data.datos.primer_apellido,
           rol: data.datos.rol,
-        }); // Guardar datos del usuario en el estado
+        });
+        // Mostrar mensaje y sonido
+        setWelcomeMessage(
+          `¡Bienvenido, ${data.datos.nombre} ${data.datos.primer_apellido}!`
+        );
+        setShowWelcome(true);
+        playWelcomeSound();
+        setTimeout(() => setShowWelcome(false), 3000);
       } else {
         Alert.alert("Error", data.mensaje || "Credenciales inválidas");
       }
     } catch (e) {
-      console.log("🔴 Error:", (e as Error).message);
       Alert.alert("Error", "No se pudo conectar al servidor");
     }
   };
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem("token");
-    setModalVisible(true);
-    setMenuVisible(false);
-    setNif("");
-    setUserData(null); // Limpiar los datos del usuario al cerrar sesión
+    try {
+      console.log("Iniciando cierre de sesión..."); // Verificar que entra en esta función
+      await AsyncStorage.multiRemove(["usuarioId", "token"]);
+      console.log("Datos eliminados");
+
+      setUserData(null);
+      setNif("");
+      setPassword("");
+      setShowWelcome(false);
+      console.log("Estado reseteado");
+
+      setMenuVisible(false);
+      setModalVisible(true);
+      console.log("Modal de inicio de sesión visible");
+    } catch (error) {
+      console.error("Error en logout:", error);
+    }
   };
 
   return (
@@ -549,22 +586,28 @@ function PantallaCombinada() {
             {/* Appbar */}
             <Appbar.Header style={styles.appbar}>
               <Appbar.Action icon="menu" color="white" onPress={toggleMenu} />
-              <Appbar.Content title="MiAcciona" titleStyle={styles.title} />
+              <Appbar.Content
+                title="MiAcciona"
+                titleStyle={styles.title}
+                style={styles.appbarTitle}
+              />
               {/* Mostrar nombre y apellido del usuario si está logueado */}
               {userData && (
                 <Appbar.Content
                   title={`${userData.nombre} ${userData.primer_apellido}`}
-                  titleStyle={{ color: "white" }}
+                  titleStyle={styles.userTitle}
                 />
               )}
 
               <Appbar.Action
                 icon="account"
                 color="white"
+                onPress={handleLogout}
               />
             </Appbar.Header>
 
             {/* Menú deslizante */}
+
             <Modal visible={menuVisible} transparent animationType="none">
               <View style={styles.menuOverlay}>
                 <Animated.View
@@ -574,12 +617,17 @@ function PantallaCombinada() {
                   ]}
                 >
                   <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={handleLogout}
+                    style={styles.menuButton}
+                    onPress={() => {
+                      console.log(
+                        "Botón 'Cerrar Sesión' en menú lateral presionado"
+                      );
+                      handleLogout();
+                    }}
                   >
-                    <Text style={styles.menuText}>Cerrar Sesión</Text>
+                    <Text style={styles.menuButtonText}>Cerrar Sesión</Text>
                   </TouchableOpacity>
-                  {/* Otros items... */}
+                  {/* Otros ítems del menú */}
                 </Animated.View>
                 <TouchableOpacity style={styles.overlay} onPress={toggleMenu} />
               </View>
@@ -605,6 +653,15 @@ function PantallaCombinada() {
           </>
         )}
       </Box>
+      {/* Snackbar de bienvenida */}
+      <Snackbar
+        visible={showWelcome}
+        onDismiss={() => setShowWelcome(false)}
+        duration={3000}
+        style={styles.snackbar}
+      >
+        {welcomeMessage}
+      </Snackbar>
     </SafeAreaView>
   );
 }
@@ -617,6 +674,40 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  menuContainer: {
+    width: 250,
+    backgroundColor: "#fff",
+    paddingTop: 20,
+    paddingLeft: 20,
+    paddingBottom: 20,
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+    height: "100%",
+    zIndex: 10, // Asegurar que el menú esté por encima del overlay
+  },
+  menuButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+  },
+  menuButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 5, // Menor que el menú para no interferir
   },
   modalContainer: {
     backgroundColor: "#FFF",
@@ -680,24 +771,17 @@ const styles = StyleSheet.create({
   appbar: {
     backgroundColor: "#D50032",
   },
-  title: {
+  appbarTitle: {
+    marginLeft: 10,
+    fontSize: 18,
+    fontWeight: "600",
     color: "white",
   },
-  menuOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
-  menuContainer: {
-    width: 250,
-    backgroundColor: "#fff",
-    paddingTop: 20,
-    paddingLeft: 20,
-    paddingBottom: 20,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-    height: "100%",
+  userTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "white",
+    marginLeft: 10,
   },
   menuItem: {
     paddingVertical: 10,
@@ -706,13 +790,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-  },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
   },
   scrollContent: {
     padding: 20,
@@ -739,5 +816,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     marginTop: 10,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+  },
+
+  snackbar: {
+    backgroundColor: "#D50032",
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+    borderRadius: 20,
+    padding: 10,
+    marginBottom: 20,
+    marginHorizontal: 20,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignSelf: "center",
   },
 });
