@@ -1,0 +1,4 @@
+
+### Obtener todos los tipos de ausencia
+
+GET http://localhost:3000/api/tipoAusencia

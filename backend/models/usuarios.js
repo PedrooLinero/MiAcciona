@@ -53,7 +53,11 @@ module.exports = function(sequelize, DataTypes) {
     subdivision_personal: {
       type: DataTypes.STRING(100),
       allowNull: true
-    }
+    },
+    diasPermitidos: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
   }, {
     sequelize,
     tableName: 'usuarios',

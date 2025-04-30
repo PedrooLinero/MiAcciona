@@ -14,4 +14,9 @@ router.post("/logout", usuarioController.logout);
 // Ruta para obtener todos los usuarios (con verificación de token y rol)
 router.get("/usuarios", /*verifyToken, verificarRol(["ADMIN"]),*/ usuarioController.getAllUsers);
 
+// Ruta para obtener un usuario por MIF
+// routes/usuarioRoutes.js
+router.get("/usuarios/:nif", usuarioController.getUserByNif);
+
+
 module.exports = router;

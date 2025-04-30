@@ -17,3 +17,7 @@ Content-Type: application/json
     "nif": "12345678Z",
     "password": "12345678Z"
 }
+
+### Obtener un usuario por su nif
+
+GET http://localhost:3000/api/usuarios/12345678Z

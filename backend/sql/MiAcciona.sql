@@ -11,13 +11,24 @@ CREATE TABLE IF NOT EXISTS usuarios (
     rol VARCHAR(50) NOT NULL,
     telefono VARCHAR(15),
     email VARCHAR(100) NOT NULL,
-    subdivision_personal VARCHAR(100)
+    subdivision_personal VARCHAR(100),
+    diasPermitidos INT
 );
 
+CREATE TABLE IF NOT EXISTS tipo_ausencia (
+    id_tipo INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE
+);
+
+INSERT INTO tipo_ausencia (nombre) VALUES
+  ('Vacaciones'),
+  ('Permisos retribuidos'),
+  ('Asuntos propios');
+
 -- Insertar datos de ejemplo
-INSERT INTO usuarios (nombre, primer_apellido, segundo_apellido, nif, fechanacimiento, estado, actividad, rol, telefono, email, subdivision_personal) VALUES
-('Juan', 'García', 'López', '12345678Z', '1990-05-15', TRUE, TRUE, 'Administrador', '612345678', 'juan.garcia@email.com', 'Recursos Humanos'),
-('María', 'Pérez', 'Sánchez', '87654321X', '1985-11-30', TRUE, FALSE, 'Usuario', '623456789', 'maria.perez@email.com', 'Contabilidad'),
-('Carlos', 'Rodríguez', NULL, '45678912Y', '1995-02-20', FALSE, TRUE, 'Técnico', '634567890', 'carlos.rodriguez@email.com', 'Informática'),
-('Ana', 'Martínez', 'Gómez', '98765432W', '1988-09-10', TRUE, TRUE, 'Supervisor', '645678901', 'ana.martinez@email.com', 'Producción'),
-('Luis', 'Fernández', 'Díaz', '32165487V', '1992-07-25', TRUE, FALSE, 'Usuario', NULL, 'luis.fernandez@email.com', NULL);
+INSERT INTO usuarios (nombre, primer_apellido, segundo_apellido, nif, fechanacimiento, estado, actividad, rol, telefono, email, subdivision_personal, diasPermitidos) VALUES
+('Juan', 'García', 'López', '12345678Z', '1990-05-15', TRUE, TRUE, 'Administrador', '612345678', 'juan.garcia@email.com', 'Recursos Humanos', 30),
+('María', 'Pérez', 'Sánchez', '87654321X', '1985-11-30', TRUE, FALSE, 'Usuario', '623456789', 'maria.perez@email.com', 'Contabilidad', 20),
+('Carlos', 'Rodríguez', NULL, '45678912Y', '1995-02-20', FALSE, TRUE, 'Técnico', '634567890', 'carlos.rodriguez@email.com', 'Informática', 30),
+('Ana', 'Martínez', 'Gómez', '98765432W', '1988-09-10', TRUE, TRUE, 'Supervisor', '645678901', 'ana.martinez@email.com', 'Producción', 45),
+('Luis', 'Fernández', 'Díaz', '32165487V', '1992-07-25', TRUE, FALSE, 'Usuario', NULL, 'luis.fernandez@email.com', NULL, 15);

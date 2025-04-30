@@ -23,7 +23,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 type RootStackParamList = {
   Home: undefined;
   Incidencia: undefined;
-  Vacaciones: undefined;
+  Ausencia: undefined;
 };
 type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 
@@ -97,7 +97,7 @@ function PantallaCombinada() {
       setErrorMessage("Debes ingresar tu NIF y contraseña");
       setShowError(true);
       playErrorSound();
-      return; // Salir si faltan datos
+      return;
     }
     setIsLoading(true);
     try {
@@ -108,22 +108,20 @@ function PantallaCombinada() {
       });
       const data = await resp.json();
       if (resp.ok) {
-        // Guardar ID en AsyncStorage
+        // → Guarda el NIF además del usuarioId
         await AsyncStorage.setItem("usuarioId", data.datos.id.toString());
-        // Guardar datos del usuario
+        +(await AsyncStorage.setItem("nif", nif));
+
         setUserData({
           id: data.datos.id,
           nombre: data.datos.nombre,
           primer_apellido: data.datos.primer_apellido,
           rol: data.datos.rol,
         });
-        // Establecer el mensaje de bienvenida
         setWelcomeMessage(
           `¡Bienvenido, ${data.datos.nombre} ${data.datos.primer_apellido}!`
         );
-        // Cerrar el modal inmediatamente
         setModalVisible(false);
-        // Indicar que el login fue exitoso
         setLoginSuccess(true);
       } else {
         setErrorMessage(data.mensaje || "Credenciales inválidas");
@@ -182,7 +180,9 @@ function PantallaCombinada() {
           onRequestClose={() => setModalVisible(false)}
         >
           <View style={styles.modalBackground}>
-            <View style={[styles.modalContainer, { width: windowWidth * 0.85 }]}>
+            <View
+              style={[styles.modalContainer, { width: windowWidth * 0.85 }]}
+            >
               <View style={styles.header}>
                 <Image
                   source={require("./../../assets/adaptive-icon.png")}
@@ -256,7 +256,10 @@ function PantallaCombinada() {
                     { transform: [{ translateX: slideAnim }] },
                   ]}
                 >
-                  <TouchableOpacity style={styles.menuButton} onPress={handleLogout}>
+                  <TouchableOpacity
+                    style={styles.menuButton}
+                    onPress={handleLogout}
+                  >
                     <Text style={styles.menuButtonText}>Cerrar Sesión</Text>
                   </TouchableOpacity>
                 </Animated.View>
@@ -274,7 +277,8 @@ function PantallaCombinada() {
               <View style={styles.welcomeContainer}>
                 <Text style={styles.welcomeText}>¡Bienvenido a MiAcciona!</Text>
                 <Text style={styles.welcomeSubtitle}>
-                  Gestiona tus incidencias, reportes y vacaciones de manera eficiente.
+                  Gestiona tus incidencias, reportes y vacaciones de manera
+                  eficiente.
                 </Text>
               </View>
               <View style={styles.quickActionsContainer}>
@@ -283,7 +287,10 @@ function PantallaCombinada() {
                   <Button
                     mode="contained"
                     icon="alert-circle"
-                    style={[styles.quickActionButton, { width: windowWidth * 0.4 }]}
+                    style={[
+                      styles.quickActionButton,
+                      { width: windowWidth * 0.4 },
+                    ]}
                     labelStyle={styles.quickActionButtonLabel}
                     contentStyle={styles.quickActionButtonContent}
                     onPress={() => navigation.navigate("Incidencia")}
@@ -293,19 +300,24 @@ function PantallaCombinada() {
                   <Button
                     mode="contained"
                     icon="calendar"
-                    style={[styles.quickActionButton, { width: windowWidth * 0.4 }]}
+                    style={[
+                      styles.quickActionButton,
+                      { width: windowWidth * 0.4 },
+                    ]}
                     labelStyle={styles.quickActionButtonLabel}
                     contentStyle={styles.quickActionButtonContent}
-                    onPress={() => navigation.navigate("Vacaciones")}
+                    onPress={() => navigation.navigate("Ausencia")}
                   >
-                    Vacaciones
+                    Ausencia
                   </Button>
                 </View>
               </View>
               <View style={styles.infoContainer}>
                 <Text style={styles.sectionTitle}>Acerca de MiAcciona</Text>
                 <Text style={styles.infoText}>
-                  MiAcciona es tu herramienta para simplificar la gestión diaria en Acciona. Reporta incidencias, consulta reportes, planifica tus vacaciones... desde un solo lugar.
+                  MiAcciona es tu herramienta para simplificar la gestión diaria
+                  en Acciona. Reporta incidencias, consulta reportes, planifica
+                  tus vacaciones... desde un solo lugar.
                 </Text>
                 <Button
                   mode="contained"
