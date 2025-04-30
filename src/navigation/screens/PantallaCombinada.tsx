@@ -15,8 +15,17 @@ import {
 import { Appbar, Button, Snackbar } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet } from "react-native";
-import { Box, set, Text } from "@gluestack-ui/themed";
+import { Box, Text } from "@gluestack-ui/themed";
 import { Audio } from "expo-av";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+
+type RootStackParamList = {
+  Home: undefined;
+  Incidencia: undefined;
+  Vacaciones: undefined;
+};
+type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 
 function PantallaCombinada() {
   const [modalVisible, setModalVisible] = useState(true);
@@ -25,28 +34,31 @@ function PantallaCombinada() {
 
   const windowWidth = Dimensions.get("window").width;
 
-  const [userData, setUserData] = useState<UserData | null>(null); // Tipo especificado aquí
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [nif, setNif] = useState("");
-  const [password, setPassword] = useState(""); // <-- Añade esto
+  const [password, setPassword] = useState("");
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [sound, setSound] = useState<Audio.Sound | null>(null);
 
-  const [showError, setShowError] = useState(false); // Nuevo estado para el error
-  const [errorMessage, setErrorMessage] = useState(""); // Nuevo estado para el mensaje de error
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const navigation = useNavigation<HomeScreenProp>();
 
   interface UserData {
     id: number;
     nombre: string;
     primer_apellido: string;
     rol: string;
-    token?: string; // opcional si también lo estás guardando en el estado
+    token?: string;
   }
 
-  // Función para cargar y reproducir sonido
   const playWelcomeSound = async () => {
     const { sound } = await Audio.Sound.createAsync(
       require("../../assets/sound/sonidoMensaje.mp3")
@@ -55,7 +67,6 @@ function PantallaCombinada() {
     await sound.playAsync();
   };
 
-  // Funcion para cargar el sonido de error
   const playErrorSound = async () => {
     const { sound } = await Audio.Sound.createAsync(
       require("../../assets/sound/sonidoError.mp3")
@@ -86,6 +97,7 @@ function PantallaCombinada() {
       setErrorMessage("Debes ingresar tu NIF y contraseña");
       setShowError(true);
       playErrorSound();
+      return; // Salir si faltan datos
     }
     setIsLoading(true);
     try {
@@ -98,21 +110,21 @@ function PantallaCombinada() {
       if (resp.ok) {
         // Guardar ID en AsyncStorage
         await AsyncStorage.setItem("usuarioId", data.datos.id.toString());
-        // Ocultar modal y guardar datos
-        setModalVisible(false);
+        // Guardar datos del usuario
         setUserData({
           id: data.datos.id,
           nombre: data.datos.nombre,
           primer_apellido: data.datos.primer_apellido,
           rol: data.datos.rol,
         });
-        // Mostrar mensaje y sonido
+        // Establecer el mensaje de bienvenida
         setWelcomeMessage(
           `¡Bienvenido, ${data.datos.nombre} ${data.datos.primer_apellido}!`
         );
-        setShowWelcome(true);
-        playWelcomeSound();
-        setTimeout(() => setShowWelcome(false), 3000);
+        // Cerrar el modal inmediatamente
+        setModalVisible(false);
+        // Indicar que el login fue exitoso
+        setLoginSuccess(true);
       } else {
         setErrorMessage(data.mensaje || "Credenciales inválidas");
         setShowError(true);
@@ -127,9 +139,21 @@ function PantallaCombinada() {
     }
   };
 
+  // Usar useEffect para mostrar el Snackbar después de que el modal se cierre
+  useEffect(() => {
+    if (loginSuccess && !modalVisible) {
+      setShowWelcome(true);
+      playWelcomeSound();
+      setTimeout(() => {
+        setShowWelcome(false);
+        setLoginSuccess(false); // Resetear el estado para futuros logins
+      }, 3000);
+    }
+  }, [loginSuccess, modalVisible]);
+
   const handleLogout = async () => {
     try {
-      console.log("Iniciando cierre de sesión..."); // Verificar que entra en esta función
+      console.log("Iniciando cierre de sesión...");
       await AsyncStorage.multiRemove(["usuarioId", "token"]);
       console.log("Datos eliminados");
 
@@ -158,9 +182,7 @@ function PantallaCombinada() {
           onRequestClose={() => setModalVisible(false)}
         >
           <View style={styles.modalBackground}>
-            <View
-              style={[styles.modalContainer, { width: windowWidth * 0.85 }]}
-            >
+            <View style={[styles.modalContainer, { width: windowWidth * 0.85 }]}>
               <View style={styles.header}>
                 <Image
                   source={require("./../../assets/adaptive-icon.png")}
@@ -192,7 +214,6 @@ function PantallaCombinada() {
                 value={password}
                 onChangeText={setPassword}
               />
-
               <TouchableOpacity
                 style={styles.button}
                 onPress={handleLogin}
@@ -217,7 +238,6 @@ function PantallaCombinada() {
                 titleStyle={styles.title}
                 style={styles.appbarTitle}
               />
-              {/* Mostrar nombre y apellido del usuario si está logueado */}
               {userData && (
                 <View style={styles.userContainer}>
                   <Text style={styles.userTitle}>
@@ -228,8 +248,6 @@ function PantallaCombinada() {
               <Appbar.Action icon="account" color="white" />
             </Appbar.Header>
 
-            {/* Menú deslizante */}
-
             <Modal visible={menuVisible} transparent animationType="none">
               <View style={styles.menuOverlay}>
                 <Animated.View
@@ -238,37 +256,25 @@ function PantallaCombinada() {
                     { transform: [{ translateX: slideAnim }] },
                   ]}
                 >
-                  <TouchableOpacity
-                    style={styles.menuButton}
-                    onPress={() => {
-                      console.log(
-                        "Botón 'Cerrar Sesión' en menú lateral presionado"
-                      );
-                      handleLogout();
-                    }}
-                  >
+                  <TouchableOpacity style={styles.menuButton} onPress={handleLogout}>
                     <Text style={styles.menuButtonText}>Cerrar Sesión</Text>
                   </TouchableOpacity>
-                  {/* Otros ítems del menú */}
                 </Animated.View>
                 <TouchableOpacity style={styles.overlay} onPress={toggleMenu} />
               </View>
             </Modal>
 
-            {/* Contenido principal */}
-
             <ScrollView contentContainerStyle={styles.scrollContent}>
               <View style={styles.logoContainer}>
                 <Image
-                  source={require("./../../assets/Logo_aplicacion.png")} // Asegúrate de que esta ruta sea correcta
+                  source={require("./../../assets/Logo_aplicacion.png")}
                   style={styles.logo}
                 />
               </View>
               <View style={styles.welcomeContainer}>
                 <Text style={styles.welcomeText}>¡Bienvenido a MiAcciona!</Text>
                 <Text style={styles.welcomeSubtitle}>
-                  Gestiona tus incidencias, reportes y vacaciones de manera
-                  eficiente.
+                  Gestiona tus incidencias, reportes y vacaciones de manera eficiente.
                 </Text>
               </View>
               <View style={styles.quickActionsContainer}>
@@ -277,24 +283,20 @@ function PantallaCombinada() {
                   <Button
                     mode="contained"
                     icon="alert-circle"
-                    style={[
-                      styles.quickActionButton,
-                      { width: windowWidth * 0.4 },
-                    ]}
+                    style={[styles.quickActionButton, { width: windowWidth * 0.4 }]}
                     labelStyle={styles.quickActionButtonLabel}
                     contentStyle={styles.quickActionButtonContent}
+                    onPress={() => navigation.navigate("Incidencia")}
                   >
                     Incidencia
                   </Button>
                   <Button
                     mode="contained"
                     icon="calendar"
-                    style={[
-                      styles.quickActionButton,
-                      { width: windowWidth * 0.4 },
-                    ]}
+                    style={[styles.quickActionButton, { width: windowWidth * 0.4 }]}
                     labelStyle={styles.quickActionButtonLabel}
                     contentStyle={styles.quickActionButtonContent}
+                    onPress={() => navigation.navigate("Vacaciones")}
                   >
                     Vacaciones
                   </Button>
@@ -303,9 +305,7 @@ function PantallaCombinada() {
               <View style={styles.infoContainer}>
                 <Text style={styles.sectionTitle}>Acerca de MiAcciona</Text>
                 <Text style={styles.infoText}>
-                  MiAcciona es tu herramienta para simplificar la gestión diaria
-                  en Acciona. Reporta incidencias, consulta reportes, planifica
-                  tus vacaciones... desde un solo lugar.
+                  MiAcciona es tu herramienta para simplificar la gestión diaria en Acciona. Reporta incidencias, consulta reportes, planifica tus vacaciones... desde un solo lugar.
                 </Text>
                 <Button
                   mode="contained"
@@ -319,21 +319,19 @@ function PantallaCombinada() {
             </ScrollView>
           </>
         )}
+
+        <Snackbar
+          visible={showWelcome}
+          onDismiss={() => setShowWelcome(false)}
+          duration={3000}
+          style={styles.snackbar}
+        >
+          {welcomeMessage}
+        </Snackbar>
       </Box>
-      {/* Snackbar de bienvenida */}
-      <Snackbar
-        visible={showWelcome}
-        onDismiss={() => setShowWelcome(false)}
-        duration={3000}
-        style={styles.snackbar}
-      >
-        {welcomeMessage}
-      </Snackbar>
     </SafeAreaView>
   );
 }
-
-export default PantallaCombinada;
 
 const styles = StyleSheet.create({
   modalBackground: {
@@ -357,7 +355,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
     borderBottomRightRadius: 10,
     height: "100%",
-    zIndex: 10, // Asegurar que el menú esté por encima del overlay
+    zIndex: 10,
   },
   menuButton: {
     paddingVertical: 10,
@@ -374,7 +372,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 5, // Menor que el menú para no interferir
+    zIndex: 5,
   },
   modalContainer: {
     backgroundColor: "#FFF",
@@ -437,21 +435,21 @@ const styles = StyleSheet.create({
   },
   appbar: {
     backgroundColor: "#D50032",
-    flexDirection: "row", // Asegurar que los elementos se distribuyan en una fila
-    alignItems: "center", // Centrar verticalmente
+    flexDirection: "row",
+    alignItems: "center",
   },
   appbarTitle: {
     marginLeft: 10,
   },
   userTitleContainer: {
-    flex: 0, // Reducir el espacio que ocupa este componente
-    marginRight: 5, // Reducir el espacio entre el nombre y el ícono
+    flex: 0,
+    marginRight: 5,
   },
   userTitle: {
     fontSize: 16,
     fontWeight: "500",
     color: "white",
-    textAlign: "right", // Alinear el texto a la derecha
+    textAlign: "right",
   },
   menuItem: {
     paddingVertical: 10,
@@ -493,10 +491,10 @@ const styles = StyleSheet.create({
     color: "white",
   },
   userContainer: {
-    flex: 1, // Permitir que el contenedor del nombre ocupe el espacio disponible
+    flex: 1,
     flexDirection: "row",
-    justifyContent: "flex-end", // Alinear el nombre a la derecha
-    marginRight: 5, // Espacio pequeño entre el nombre y el ícono
+    justifyContent: "flex-end",
+    marginRight: 5,
   },
   snackbar: {
     backgroundColor: "#D50032",
@@ -508,10 +506,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginHorizontal: 20,
     position: "absolute",
-    bottom: 0,
+    bottom: 20, // Ajustado para mejor visibilidad
     left: 0,
     right: 0,
     alignSelf: "center",
+    zIndex: 1000, // Asegurar que esté por encima de otros elementos
   },
   infoContainer: {
     backgroundColor: "#fff",
@@ -542,10 +541,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   infoButtonLabel: {
-    fontSize: 18, // Aumentado de 16 a 18
+    fontSize: 18,
     fontWeight: "600",
     color: "#FFF",
-    textAlign: "center", // Asegura que el texto esté centrado
+    textAlign: "center",
   },
   quickActionsContainer: {
     marginBottom: 40,
@@ -589,19 +588,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   errorSnackbar: {
-    backgroundColor: "#FF4444", // Color rojo para el error
+    backgroundColor: "#FF4444",
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
     borderRadius: 20,
     padding: 10,
-    marginTop: 40, // Margen superior para que no se pegue al borde
+    marginTop: 40,
     marginHorizontal: 20,
     position: "absolute",
-    top: 0, // Posicionar en la parte superior
+    top: 0,
     left: 0,
     right: 0,
     alignSelf: "center",
-    zIndex: 20, // Asegurar que esté por encima del contenido del Modal
+    zIndex: 20,
   },
 });
+
+export default PantallaCombinada;
