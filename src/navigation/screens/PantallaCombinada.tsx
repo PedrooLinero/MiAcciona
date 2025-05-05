@@ -24,6 +24,7 @@ type RootStackParamList = {
   Home: undefined;
   Incidencia: undefined;
   Ausencia: undefined;
+  PantallaPerfil: undefined;
 };
 type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 
@@ -245,7 +246,11 @@ function PantallaCombinada() {
                   </Text>
                 </View>
               )}
-              <Appbar.Action icon="account" color="white" />
+              <Appbar.Action
+                icon="account"
+                color="white"
+                onPress={() => navigation.navigate("PantallaPerfil")}
+              />
             </Appbar.Header>
 
             <Modal visible={menuVisible} transparent animationType="none">
