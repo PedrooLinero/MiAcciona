@@ -15,27 +15,23 @@ services:
       - ./conf:/etc/mysql/conf.d
       - persistent:/var/lib/mysql
     networks:
-      - app-network
+      - default
 
   www:
     build: .
     ports:
-      - "0.0.0.0:3000:3000" # Mapea el puerto 3000 del contenedor al 3000 de la máquina
+      - "80:80"
     volumes:
-      - ./:/usr/src/app # Monta el directorio actual al directorio de trabajo del backend
-    environment:
-      - NODE_ENV=development
-      - FRONTEND_URL=http://10.140.15.36:8081 # Ajusta según tu IP
-      - PORT=3000 # Asegura que el backend use el puerto 3000
-    depends_on:
+      - ./www:/var/www/html
+    links:
       - db
     networks:
-      - app-network
+      - default
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    depends_on:
-      - db
+    links:
+      - db:db
     ports:
       - "8000:80"
     environment:
@@ -43,11 +39,7 @@ services:
       MYSQL_PASSWORD: test
       MYSQL_ROOT_PASSWORD: test
     networks:
-      - app-network
+      - default
 
 volumes:
   persistent:
-
-networks:
-  app-network:
-    driver: bridge

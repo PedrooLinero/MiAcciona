@@ -13,8 +13,8 @@ import {
   Snackbar,
   TextInput,
   Divider,
-  Provider as PaperProvider, // Importamos PaperProvider
-  DefaultTheme, // Importamos el tema por defecto
+  Provider as PaperProvider,
+  DefaultTheme,
 } from "react-native-paper";
 import { Text } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -22,13 +22,12 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DatePickerModal } from "react-native-paper-dates";
 
-// Definimos un tema personalizado
 const customTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: "#D50032", // Cambiamos el color primario a rojo
-    accent: "#D50032", // Cambiamos el color de acento a rojo
+    primary: "#D50032",
+    accent: "#D50032",
   },
 };
 
@@ -76,7 +75,7 @@ export default function PantallaAusencia() {
     (async () => {
       try {
         const tiposRes = await fetch(
-          "http://10.140.15.36:3000/api/tipoAusencia"
+          "http://localhost:3000/api/tipoAusencia"
         );
         const tiposJson = await tiposRes.json();
         const tiposData = Array.isArray(tiposJson) ? tiposJson : tiposJson.data;
@@ -95,7 +94,7 @@ export default function PantallaAusencia() {
         const nif = await AsyncStorage.getItem("nif");
         if (!nif) throw new Error("No se encontró NIF en almacenamiento");
         const res = await fetch(
-          `http://10.140.15.36:3000/api/usuarios/${nif}`,
+          `http://localhost:3000/api/usuarios/${nif}`,
           {
             credentials: "include",
           }
@@ -141,13 +140,15 @@ export default function PantallaAusencia() {
   }
 
   const formatDateToLocal = (date: Date): string => {
-    const offset: number = date.getTimezoneOffset() * 60000;
-    const localDate: Date = new Date(date.getTime() - offset);
-    return localDate.toISOString().split("T")[0];
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
+  const apellidosCombinados = `${user.primer_apellido} ${user.segundo_apellido || ""}`.trim();
+
   return (
-    // Envolvemos todo en PaperProvider con el tema personalizado
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={styles.container}>
         <Appbar.Header style={styles.appbar}>
@@ -197,36 +198,36 @@ export default function PantallaAusencia() {
 
             <Divider style={{ marginBottom: 12 }} />
 
-            <TextInput
-              label="Nombre"
-              value={user.nombre}
-              disabled
-              style={styles.input}
-            />
-            <TextInput
-              label="Primer Apellido"
-              value={user.primer_apellido}
-              disabled
-              style={styles.input}
-            />
-            <TextInput
-              label="Segundo Apellido"
-              value={user.segundo_apellido || ""}
-              disabled
-              style={styles.input}
-            />
-            <TextInput
-              label="DNI"
-              value={user.nif}
-              disabled
-              style={styles.input}
-            />
-            <TextInput
-              label="Email"
-              value={user.email}
-              disabled
-              style={styles.input}
-            />
+            <View style={styles.row}>
+              <TextInput
+                label="Nombre"
+                value={user.nombre}
+                disabled
+                style={[styles.input, styles.halfInput]}
+              />
+              <TextInput
+                label="Apellidos"
+                value={apellidosCombinados}
+                disabled
+                style={[styles.input, styles.halfInput]}
+              />
+            </View>
+
+            <View style={styles.row}>
+              <TextInput
+                label="DNI"
+                value={user.nif}
+                disabled
+                style={[styles.input, styles.halfInput]}
+              />
+              <TextInput
+                label="Email"
+                value={user.email}
+                disabled
+                style={[styles.input, styles.halfInput]}
+              />
+            </View>
+
             <TextInput
               label="Título"
               value={titulo}
@@ -241,32 +242,35 @@ export default function PantallaAusencia() {
               numberOfLines={3}
               style={[styles.input, { height: 100 }]}
             />
-            <TextInput
-              label="Fecha Inicio"
-              value={fechaInicio}
-              onFocus={() => setOpenInicio(true)}
-              showSoftInputOnFocus={false}
-              style={styles.input}
-              right={
-                <TextInput.Icon
-                  icon="calendar"
-                  onPress={() => setOpenInicio(true)}
-                />
-              }
-            />
-            <TextInput
-              label="Fecha Fin"
-              value={fechaFin}
-              onFocus={() => setOpenFin(true)}
-              showSoftInputOnFocus={false}
-              style={styles.input}
-              right={
-                <TextInput.Icon
-                  icon="calendar"
-                  onPress={() => setOpenFin(true)}
-                />
-              }
-            />
+
+            <View style={styles.row}>
+              <TextInput
+                label="Fecha Inicio"
+                value={fechaInicio}
+                onFocus={() => setOpenInicio(true)}
+                showSoftInputOnFocus={false}
+                style={[styles.input, styles.halfInput]}
+                right={
+                  <TextInput.Icon
+                    icon="calendar"
+                    onPress={() => setOpenInicio(true)}
+                  />
+                }
+              />
+              <TextInput
+                label="Fecha Fin"
+                value={fechaFin}
+                onFocus={() => setOpenFin(true)}
+                showSoftInputOnFocus={false}
+                style={[styles.input, styles.halfInput]}
+                right={
+                  <TextInput.Icon
+                    icon="calendar"
+                    onPress={() => setOpenFin(true)}
+                  />
+                }
+              />
+            </View>
 
             <Button
               mode="contained"
@@ -284,7 +288,6 @@ export default function PantallaAusencia() {
           </View>
         </ScrollView>
 
-        {/* Modal para Fecha Inicio */}
         <DatePickerModal
           locale="es"
           mode="single"
@@ -302,7 +305,6 @@ export default function PantallaAusencia() {
           animationType="slide"
         />
 
-        {/* Modal para Fecha Fin */}
         <DatePickerModal
           locale="es"
           mode="single"
@@ -372,7 +374,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 20,
     borderRadius: 12,
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
     width: windowWidth * 0.9,
     alignSelf: "center",
   },
@@ -389,6 +390,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
     borderRadius: 20,
   },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+  halfInput: {
+    width: "48%",
+  },
   submitButton: {
     backgroundColor: "#D50032",
     borderRadius: 20,
@@ -403,19 +412,9 @@ const styles = StyleSheet.create({
   },
   snackbar: {
     backgroundColor: "#D50032",
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
     borderRadius: 20,
-    padding: 10,
     marginBottom: 20,
     marginHorizontal: 20,
-    position: "absolute",
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignSelf: "center",
-    zIndex: 1000,
   },
   tipoButtonContainer: {
     flexDirection: "row",
@@ -428,15 +427,12 @@ const styles = StyleSheet.create({
     width: windowWidth * 0.35,
     height: 50,
     justifyContent: "center",
-    alignItems: "center",
     borderRadius: 10,
     borderColor: "#D50032",
     borderWidth: 2,
-    backgroundColor: "transparent",
   },
   selectedButton: {
     backgroundColor: "#D50032",
-    borderColor: "#D50032",
   },
   tipoButtonContent: {
     paddingHorizontal: 10,
@@ -445,7 +441,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "#D50032",
-    textAlign: "center",
   },
   selectedButtonLabel: {
     color: "#FFFFFF",

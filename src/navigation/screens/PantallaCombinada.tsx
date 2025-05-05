@@ -5,7 +5,6 @@ import {
   Modal,
   TouchableOpacity,
   Image,
-  ScrollView,
   SafeAreaView,
   Animated,
   TextInput,
@@ -19,6 +18,8 @@ import { Box, Text } from "@gluestack-ui/themed";
 import { Audio } from "expo-av";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { ScrollView } from "react-native-gesture-handler";
+
 
 type RootStackParamList = {
   Home: undefined;
@@ -102,7 +103,7 @@ function PantallaCombinada() {
     }
     setIsLoading(true);
     try {
-      const resp = await fetch("http://10.140.15.36:3000/api/login", {
+      const resp = await fetch("http://localhost:3000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nif, password }),
@@ -171,7 +172,7 @@ function PantallaCombinada() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F5F5" }}>
+    <ScrollView style={{ flex: 1 }}>
       <Box style={{ flex: 1 }}>
         {/* Modal de Login */}
         <Modal
@@ -272,68 +273,66 @@ function PantallaCombinada() {
               </View>
             </Modal>
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("./../../assets/Logo_aplicacion.png")}
-                  style={styles.logo}
-                />
-              </View>
-              <View style={styles.welcomeContainer}>
-                <Text style={styles.welcomeText}>¡Bienvenido a MiAcciona!</Text>
-                <Text style={styles.welcomeSubtitle}>
-                  Gestiona tus incidencias, reportes y vacaciones de manera
-                  eficiente.
-                </Text>
-              </View>
-              <View style={styles.quickActionsContainer}>
-                <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-                <View style={styles.quickActions}>
-                  <Button
-                    mode="contained"
-                    icon="alert-circle"
-                    style={[
-                      styles.quickActionButton,
-                      { width: windowWidth * 0.4 },
-                    ]}
-                    labelStyle={styles.quickActionButtonLabel}
-                    contentStyle={styles.quickActionButtonContent}
-                    onPress={() => navigation.navigate("Incidencia")}
-                  >
-                    Incidencia
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="calendar"
-                    style={[
-                      styles.quickActionButton,
-                      { width: windowWidth * 0.4 },
-                    ]}
-                    labelStyle={styles.quickActionButtonLabel}
-                    contentStyle={styles.quickActionButtonContent}
-                    onPress={() => navigation.navigate("Ausencia")}
-                  >
-                    Ausencia
-                  </Button>
-                </View>
-              </View>
-              <View style={styles.infoContainer}>
-                <Text style={styles.sectionTitle}>Acerca de MiAcciona</Text>
-                <Text style={styles.infoText}>
-                  MiAcciona es tu herramienta para simplificar la gestión diaria
-                  en Acciona. Reporta incidencias, consulta reportes, planifica
-                  tus vacaciones... desde un solo lugar.
-                </Text>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require("./../../assets/Logo_aplicacion.png")}
+                style={styles.logo}
+              />
+            </View>
+            <View style={styles.welcomeContainer}>
+              <Text style={styles.welcomeText}>¡Bienvenido a MiAcciona!</Text>
+              <Text style={styles.welcomeSubtitle}>
+                Gestiona tus incidencias, reportes y vacaciones de manera
+                eficiente.
+              </Text>
+            </View>
+            <View style={styles.quickActionsContainer}>
+              <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
+              <View style={styles.quickActions}>
                 <Button
                   mode="contained"
-                  style={styles.infoButton}
-                  labelStyle={styles.infoButtonLabel}
-                  contentStyle={styles.infoButtonContent}
+                  icon="alert-circle"
+                  style={[
+                    styles.quickActionButton,
+                    { width: windowWidth * 0.4 },
+                  ]}
+                  labelStyle={styles.quickActionButtonLabel}
+                  contentStyle={styles.quickActionButtonContent}
+                  onPress={() => navigation.navigate("Incidencia")}
                 >
-                  Saber más
+                  Incidencia
+                </Button>
+                <Button
+                  mode="contained"
+                  icon="calendar"
+                  style={[
+                    styles.quickActionButton,
+                    { width: windowWidth * 0.4 },
+                  ]}
+                  labelStyle={styles.quickActionButtonLabel}
+                  contentStyle={styles.quickActionButtonContent}
+                  onPress={() => navigation.navigate("Ausencia")}
+                >
+                  Ausencia
                 </Button>
               </View>
-            </ScrollView>
+            </View>
+            <View style={styles.infoContainer}>
+              <Text style={styles.sectionTitle}>Acerca de MiAcciona</Text>
+              <Text style={styles.infoText}>
+                MiAcciona es tu herramienta para simplificar la gestión diaria
+                en Acciona. Reporta incidencias, consulta reportes, planifica
+                tus vacaciones... desde un solo lugar.
+              </Text>
+              <Button
+                mode="contained"
+                style={styles.infoButton}
+                labelStyle={styles.infoButtonLabel}
+                contentStyle={styles.infoButtonContent}
+              >
+                Saber más
+              </Button>
+            </View>
           </>
         )}
 
@@ -346,7 +345,7 @@ function PantallaCombinada() {
           {welcomeMessage}
         </Snackbar>
       </Box>
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 
@@ -371,7 +370,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderTopRightRadius: 10,
     borderBottomRightRadius: 10,
-    height: "100%",
     zIndex: 10,
   },
   menuButton: {
@@ -479,6 +477,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     alignItems: "center",
+    flexGrow: 1,
   },
   logoContainer: {
     marginVertical: 20,
