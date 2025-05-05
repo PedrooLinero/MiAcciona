@@ -13,11 +13,24 @@ import {
   Snackbar,
   TextInput,
   Divider,
+  Provider as PaperProvider, // Importamos PaperProvider
+  DefaultTheme, // Importamos el tema por defecto
 } from "react-native-paper";
-import { Box, Text } from "@gluestack-ui/themed";
+import { Text } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DatePickerModal } from "react-native-paper-dates";
+
+// Definimos un tema personalizado
+const customTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: "#D50032", // Cambiamos el color primario a rojo
+    accent: "#D50032", // Cambiamos el color de acento a rojo
+  },
+};
 
 type RootStackParamList = {
   Home: undefined;
@@ -45,7 +58,7 @@ export default function PantallaAusencia() {
     segundo_apellido: string;
     nif: string;
     email: string;
-    diasPermitidos: number | null; // Añadimos diasPermitidos al tipo
+    diasPermitidos: number | null;
   } | null>(null);
 
   const [tipoSeleccionado, setTipoSeleccionado] = useState<number | null>(null);
@@ -53,6 +66,8 @@ export default function PantallaAusencia() {
   const [descripcion, setDescripcion] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+  const [openInicio, setOpenInicio] = useState(false);
+  const [openFin, setOpenFin] = useState(false);
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,7 +75,9 @@ export default function PantallaAusencia() {
   useEffect(() => {
     (async () => {
       try {
-        const tiposRes = await fetch("http://localhost:3000/api/tipoAusencia");
+        const tiposRes = await fetch(
+          "http://10.140.15.36:3000/api/tipoAusencia"
+        );
         const tiposJson = await tiposRes.json();
         const tiposData = Array.isArray(tiposJson) ? tiposJson : tiposJson.data;
         setTipoList(tiposData);
@@ -77,9 +94,12 @@ export default function PantallaAusencia() {
       try {
         const nif = await AsyncStorage.getItem("nif");
         if (!nif) throw new Error("No se encontró NIF en almacenamiento");
-        const res = await fetch(`http://localhost:3000/api/usuarios/${nif}`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `http://10.140.15.36:3000/api/usuarios/${nif}`,
+          {
+            credentials: "include",
+          }
+        );
         const json = await res.json();
         const datos = json.datos ?? json.data ?? json;
         setUser(datos);
@@ -120,9 +140,16 @@ export default function PantallaAusencia() {
     );
   }
 
+  const formatDateToLocal = (date: Date): string => {
+    const offset: number = date.getTimezoneOffset() * 60000;
+    const localDate: Date = new Date(date.getTime() - offset);
+    return localDate.toISOString().split("T")[0];
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F5F5" }}>
-      <Box style={{ flex: 1 }}>
+    // Envolvemos todo en PaperProvider con el tema personalizado
+    <PaperProvider theme={customTheme}>
+      <SafeAreaView style={styles.container}>
         <Appbar.Header style={styles.appbar}>
           <Appbar.Action
             icon="arrow-left"
@@ -134,17 +161,19 @@ export default function PantallaAusencia() {
             titleStyle={styles.title}
             style={{ marginLeft: 0 }}
           />
-          {/* Añadimos los días permitidos a la derecha */}
           <Text style={styles.diasPermitidos}>
             Días restantes: {user.diasPermitidos ?? "N/A"}
           </Text>
         </Appbar.Header>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+        >
           <View style={styles.formContainer}>
             <Text style={styles.heading}>Nueva Solicitud</Text>
 
-            {/* Botones para seleccionar el tipo de ausencia */}
             <View style={styles.tipoButtonContainer}>
               {tipoList.map((t) => (
                 <Button
@@ -198,7 +227,6 @@ export default function PantallaAusencia() {
               disabled
               style={styles.input}
             />
-
             <TextInput
               label="Título"
               value={titulo}
@@ -214,16 +242,30 @@ export default function PantallaAusencia() {
               style={[styles.input, { height: 100 }]}
             />
             <TextInput
-              label="Fecha Inicio (YYYY-MM-DD)"
+              label="Fecha Inicio"
               value={fechaInicio}
-              onChangeText={setFechaInicio}
+              onFocus={() => setOpenInicio(true)}
+              showSoftInputOnFocus={false}
               style={styles.input}
+              right={
+                <TextInput.Icon
+                  icon="calendar"
+                  onPress={() => setOpenInicio(true)}
+                />
+              }
             />
             <TextInput
-              label="Fecha Fin (YYYY-MM-DD)"
+              label="Fecha Fin"
               value={fechaFin}
-              onChangeText={setFechaFin}
+              onFocus={() => setOpenFin(true)}
+              showSoftInputOnFocus={false}
               style={styles.input}
+              right={
+                <TextInput.Icon
+                  icon="calendar"
+                  onPress={() => setOpenFin(true)}
+                />
+              }
             />
 
             <Button
@@ -237,8 +279,49 @@ export default function PantallaAusencia() {
             >
               Enviar Solicitud
             </Button>
+
+            <View style={{ height: 200, backgroundColor: "transparent" }} />
           </View>
         </ScrollView>
+
+        {/* Modal para Fecha Inicio */}
+        <DatePickerModal
+          locale="es"
+          mode="single"
+          visible={openInicio}
+          onDismiss={() => setOpenInicio(false)}
+          date={fechaInicio ? new Date(fechaInicio) : undefined}
+          onConfirm={({ date }) => {
+            setOpenInicio(false);
+            if (date) {
+              setFechaInicio(formatDateToLocal(date));
+            }
+          }}
+          saveLabel="Guardar"
+          label="Seleccionar fecha de inicio"
+          animationType="slide"
+        />
+
+        {/* Modal para Fecha Fin */}
+        <DatePickerModal
+          locale="es"
+          mode="single"
+          visible={openFin}
+          onDismiss={() => setOpenFin(false)}
+          date={fechaFin ? new Date(fechaFin) : undefined}
+          onConfirm={({ date }) => {
+            setOpenFin(false);
+            if (date) {
+              setFechaFin(formatDateToLocal(date));
+            }
+          }}
+          saveLabel="Guardar"
+          label="Seleccionar fecha de fin"
+          validRange={{
+            startDate: fechaInicio ? new Date(fechaInicio) : undefined,
+          }}
+          animationType="slide"
+        />
 
         <Snackbar
           visible={showSuccess}
@@ -247,18 +330,25 @@ export default function PantallaAusencia() {
         >
           ¡Solicitud enviada con éxito!
         </Snackbar>
-      </Box>
-    </SafeAreaView>
+      </SafeAreaView>
+    </PaperProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+  },
+  scrollView: {
+    flex: 1,
+  },
   appbar: {
     backgroundColor: "#D50032",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // Para alinear el texto a la derecha
-    paddingRight: 16, // Espacio a la derecha para el texto
+    justifyContent: "space-between",
+    paddingRight: 16,
   },
   title: {
     fontSize: 18,
@@ -277,24 +367,21 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingVertical: 20,
-    alignItems: "center",
   },
   formContainer: {
     backgroundColor: "#fff",
     padding: 20,
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
     width: windowWidth * 0.9,
-    alignItems: "center",
+    alignSelf: "center",
   },
   heading: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 16,
+    textAlign: "center",
   },
   input: {
     width: "100%",
@@ -307,6 +394,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 8,
     justifyContent: "center",
+    alignSelf: "center",
   },
   submitLabel: {
     fontSize: 16,
