@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     width: "50%", // Ocupa la mitad del ancho (mitad izquierda)
-    height: "100%", // Ocupa toda la altura
+    height: "0%", // Ocupa toda la altura
     backgroundColor: "#fff",
     position: "absolute",
     left: 0, // Alineado a la izquierda
@@ -558,7 +558,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    width: "100%",
+    width: "95%",
+    marginLeft: 10,
+    marginRight: 10,
   },
   infoText: {
     fontSize: 16,
@@ -593,6 +595,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     color: "#333",
+    alignContent: "center",
+    textAlign: "center",
   },
   quickActions: {
     flexDirection: "row",
