@@ -1,4 +1,3 @@
-// src/screens/PantallaCombinada.js
 import React, { useState, useEffect, useRef } from "react";
 import {
   Dimensions,
@@ -20,7 +19,6 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ScrollView } from "react-native-gesture-handler";
 
-
 type RootStackParamList = {
   Home: undefined;
   Incidencia: undefined;
@@ -32,7 +30,9 @@ type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 function PantallaCombinada() {
   const [modalVisible, setModalVisible] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
-  const slideAnim = useRef(new Animated.Value(-250)).current;
+  const slideAnim = useRef(
+    new Animated.Value(-Dimensions.get("window").width / 2)
+  ).current;
 
   const windowWidth = Dimensions.get("window").width;
 
@@ -88,7 +88,7 @@ function PantallaCombinada() {
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);
     Animated.timing(slideAnim, {
-      toValue: menuVisible ? -250 : 0,
+      toValue: menuVisible ? -Dimensions.get("window").width / 2 : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
@@ -110,9 +110,8 @@ function PantallaCombinada() {
       });
       const data = await resp.json();
       if (resp.ok) {
-        // → Guarda el NIF además del usuarioId
         await AsyncStorage.setItem("usuarioId", data.datos.id.toString());
-        +(await AsyncStorage.setItem("nif", nif));
+        await AsyncStorage.setItem("nif", nif);
 
         setUserData({
           id: data.datos.id,
@@ -139,14 +138,13 @@ function PantallaCombinada() {
     }
   };
 
-  // Usar useEffect para mostrar el Snackbar después de que el modal se cierre
   useEffect(() => {
     if (loginSuccess && !modalVisible) {
       setShowWelcome(true);
       playWelcomeSound();
       setTimeout(() => {
         setShowWelcome(false);
-        setLoginSuccess(false); // Resetear el estado para futuros logins
+        setLoginSuccess(false);
       }, 3000);
     }
   }, [loginSuccess, modalVisible]);
@@ -262,12 +260,22 @@ function PantallaCombinada() {
                     { transform: [{ translateX: slideAnim }] },
                   ]}
                 >
-                  <TouchableOpacity
-                    style={styles.menuButton}
-                    onPress={handleLogout}
-                  >
-                    <Text style={styles.menuButtonText}>Cerrar Sesión</Text>
-                  </TouchableOpacity>
+                  <View style={styles.menuHeader}>
+                    <Text style={styles.menuTitle}>Menú</Text>
+                    <TouchableOpacity onPress={toggleMenu}>
+                      <Text style={styles.closeButton}>X</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.menuItemsContainer}>
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      onPress={handleLogout}
+                    >
+                      <Text style={styles.menuButtonText}>Cerrar Sesión</Text>
+                    </TouchableOpacity>
+                    {/* Espacio en blanco para ítems futuros */}
+                    <View style={styles.menuSpacer} />
+                  </View>
                 </Animated.View>
                 <TouchableOpacity style={styles.overlay} onPress={toggleMenu} />
               </View>
@@ -358,28 +366,52 @@ const styles = StyleSheet.create({
   },
   menuOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "flex-start",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo semitransparente para atenuar el contenido detrás
   },
   menuContainer: {
-    width: 250,
+    width: "50%", // Ocupa la mitad del ancho (mitad izquierda)
+    height: "100%", // Ocupa toda la altura
     backgroundColor: "#fff",
-    paddingTop: 20,
-    paddingLeft: 20,
-    paddingBottom: 20,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-    zIndex: 10,
+    position: "absolute",
+    left: 0, // Alineado a la izquierda
+    paddingTop: 40,
+    paddingHorizontal: 20,
   },
-  menuButton: {
+  menuHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 10,
-    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
   },
-  menuButtonText: {
-    fontSize: 16,
+  menuTitle: {
+    fontSize: 20,
     fontWeight: "bold",
     color: "#333",
+  },
+  closeButton: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#D50032",
+  },
+  menuItemsContainer: {
+    flex: 1,
+    paddingVertical: 20,
+  },
+  menuButton: {
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  menuButtonText: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "#333",
+  },
+  menuSpacer: {
+    flex: 1, // Ocupa el resto del espacio en blanco dentro del contenedor
   },
   overlay: {
     position: "absolute",
@@ -387,7 +419,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 5,
+    zIndex: -1, // Debajo del menú para que se pueda tocar y cerrar
   },
   modalContainer: {
     backgroundColor: "#FFF",
@@ -456,23 +488,11 @@ const styles = StyleSheet.create({
   appbarTitle: {
     marginLeft: 10,
   },
-  userTitleContainer: {
-    flex: 0,
-    marginRight: 5,
-  },
   userTitle: {
     fontSize: 16,
     fontWeight: "500",
     color: "white",
     textAlign: "right",
-  },
-  menuItem: {
-    paddingVertical: 10,
-  },
-  menuText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
   },
   scrollContent: {
     padding: 20,
@@ -481,11 +501,13 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     marginVertical: 20,
+    alignItems: "center",
   },
   logo: {
     width: 450,
     height: 150,
     resizeMode: "contain",
+    alignItems: "center",
   },
   welcomeContainer: {
     marginBottom: 30,
@@ -522,11 +544,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginHorizontal: 20,
     position: "absolute",
-    bottom: 20, // Ajustado para mejor visibilidad
+    bottom: 20,
     left: 0,
     right: 0,
     alignSelf: "center",
-    zIndex: 1000, // Asegurar que esté por encima de otros elementos
+    zIndex: 1000,
   },
   infoContainer: {
     backgroundColor: "#fff",
