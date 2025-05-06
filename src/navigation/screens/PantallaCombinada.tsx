@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     width: "50%", // Ocupa la mitad del ancho (mitad izquierda)
-    height: "0%", // Ocupa toda la altura
+    height: "100%", // Ocupa toda la altura
     backgroundColor: "#fff",
     position: "absolute",
     left: 0, // Alineado a la izquierda
