@@ -17,51 +17,53 @@ function UsuarioController() {
    * Aquí usamos nif === password
    */
   this.login = async (req, res) => {
-    const { nif, password } = req.body;
+    const { nif, password, huella } = req.body;
+  
     try {
-      if (!nif || !password) {
-        return res
-          .status(400)
-          .json(Respuesta.error(null, "El NIF y la contraseña son obligatorios"));
+      if (!nif || (!password && !huella)) {
+        return res.status(400).json(
+          Respuesta.error(null, "El NIF y la contraseña o huella son obligatorios")
+        );
       }
+  
       const user = await Usuario.findOne({ where: { nif } });
       if (!user) {
-        return res
-          .status(401)
-          .json(Respuesta.error(null, "Usuario no encontrado"));
+        return res.status(401).json(Respuesta.error(null, "Usuario no encontrado"));
       }
-      if (password !== user.nif) {
-        return res
-          .status(401)
-          .json(Respuesta.error(null, "Credenciales inválidas"));
+  
+      // Login clásico
+      if (!huella && password !== user.nif) {
+        return res.status(401).json(Respuesta.error(null, "Credenciales inválidas"));
       }
+  
+      // Si pasó la verificación biométrica o la contraseña coincide, generamos el token
       const token = jwt.sign(
         { sub: user.Idusuario, nif: user.nif, rol: user.rol },
         config.secretKey,
         { expiresIn: "1h" }
       );
+  
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         maxAge: 3600000
       });
-      const salida = {
-        id: user.Idusuario,
-        nombre: user.nombre,
-        primer_apellido: user.primer_apellido,
-        rol: user.rol
-      };
-      return res
-        .status(200)
-        .json(Respuesta.exito(salida, "Inicio de sesión exitoso"));
+  
+      return res.status(200).json(
+        Respuesta.exito({
+          id: user.Idusuario,
+          nombre: user.nombre,
+          primer_apellido: user.primer_apellido,
+          rol: user.rol
+        }, "Inicio de sesión exitoso")
+      );
     } catch (err) {
       logMensaje("Error en login: " + err.message, "error");
-      return res
-        .status(500)
-        .json(Respuesta.error(null, "Error interno del servidor"));
+      return res.status(500).json(Respuesta.error(null, "Error interno del servidor"));
     }
   };
+  
 
   /**
    * POST /api/logout

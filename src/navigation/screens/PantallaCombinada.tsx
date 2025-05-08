@@ -18,9 +18,6 @@ import { Audio } from "expo-av";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ScrollView } from "react-native-gesture-handler";
-import ReactNativeBiometrics from "react-native-biometrics";
-
-const rnBiometrics = new ReactNativeBiometrics();
 
 type RootStackParamList = {
   Home: undefined;
@@ -38,6 +35,10 @@ function PantallaCombinada() {
   ).current;
 
   const windowWidth = Dimensions.get("window").width;
+
+  const rnBiometrics = new ReactNativeBiometrics();
+  console.log("Instancia de ReactNativeBiometrics:", rnBiometrics);
+
 
   const [userData, setUserData] = useState<UserData | null>(null);
   const [nif, setNif] = useState("");
@@ -175,20 +176,38 @@ function PantallaCombinada() {
   };
 
   const loginWithBiometrics = async () => {
-    const { available, biometryType } = await rnBiometrics.isSensorAvailable();
-
-    if (!available) {
-      Alert.alert("Error", "Tu dispositivo no tiene biometría activa.");
-      return;
-    }
-
     try {
+      if (!rnBiometrics) {
+        Alert.alert("Error", "No se pudo inicializar el módulo de biometría.");
+        console.error("rnBiometrics es null o undefined");
+        return;
+      }
+   
+      // Log the rnBiometrics instance to inspect it
+      console.log("rnBiometrics instance:", rnBiometrics);
+   
+      // Check if isSensorAvailable exists
+      if (!rnBiometrics.isSensorAvailable) {
+        Alert.alert("Error", "El método isSensorAvailable no está disponible.");
+        console.error("isSensorAvailable is undefined or null");
+        return;
+      }
+   
+      const { available, biometryType } = await rnBiometrics.isSensorAvailable();
+      console.log("Biometría disponible:", available, "Tipo de biometría:", biometryType);
+   
+      if (!available) {
+        Alert.alert("Error", `Biometría no disponible. Tipo: ${biometryType || "Ninguno"}`);
+        return;
+      }
+   
       const resultObject = await rnBiometrics.simplePrompt({
         promptMessage: "Autenticación biométrica",
       });
-
       const { success } = resultObject;
-
+   
+      console.log("Resultado de la autenticación:", success);
+   
       if (success) {
         const storedNif = await AsyncStorage.getItem("nif");
         if (!storedNif) {
@@ -198,12 +217,14 @@ function PantallaCombinada() {
           );
           return;
         }
-
-        const resp = await fetch(
-          `http://localhost:3000/api/usuarios/${storedNif}`
-        );
+   
+        const resp = await fetch("http://localhost:3000/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nif: storedNif, huella: true }),
+        });
         const data = await resp.json();
-
+   
         if (resp.ok) {
           setUserData({
             id: data.datos.Idusuario,
@@ -224,8 +245,8 @@ function PantallaCombinada() {
         Alert.alert("Cancelado", "No se pudo autenticar.");
       }
     } catch (e) {
-      console.error("Error biometría:", e);
-      Alert.alert("Error", "Error al usar biometría.");
+      console.error("Error en autenticación biométrica:", e);
+      Alert.alert("Error", "Ocurrió un error durante la autenticación biométrica.");
     }
   };
 
@@ -283,12 +304,15 @@ function PantallaCombinada() {
                   {isLoading ? "Cargando..." : "Iniciar sesión"}
                 </Text>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.button}
+                onPress={loginWithBiometrics}
+              >
+                <Text style={styles.buttonText}>Iniciar con Huella</Text>
+              </TouchableOpacity>
             </View>
           </View>
-
-          <TouchableOpacity style={styles.button} onPress={loginWithBiometrics}>
-            <Text style={styles.buttonText}>Iniciar con Huella</Text>
-          </TouchableOpacity>
         </Modal>
 
         {/* Contenido principal */}
