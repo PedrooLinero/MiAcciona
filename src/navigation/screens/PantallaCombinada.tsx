@@ -18,6 +18,9 @@ import { Audio } from "expo-av";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ScrollView } from "react-native-gesture-handler";
+import ReactNativeBiometrics from "react-native-biometrics";
+
+const rnBiometrics = new ReactNativeBiometrics();
 
 type RootStackParamList = {
   Home: undefined;
@@ -50,6 +53,8 @@ function PantallaCombinada() {
   const [loginSuccess, setLoginSuccess] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const [biometricData, setBiometricData] = useState({});
 
   const navigation = useNavigation<HomeScreenProp>();
 
@@ -169,6 +174,61 @@ function PantallaCombinada() {
     }
   };
 
+  const loginWithBiometrics = async () => {
+    const { available, biometryType } = await rnBiometrics.isSensorAvailable();
+
+    if (!available) {
+      Alert.alert("Error", "Tu dispositivo no tiene biometría activa.");
+      return;
+    }
+
+    try {
+      const resultObject = await rnBiometrics.simplePrompt({
+        promptMessage: "Autenticación biométrica",
+      });
+
+      const { success } = resultObject;
+
+      if (success) {
+        const storedNif = await AsyncStorage.getItem("nif");
+        if (!storedNif) {
+          Alert.alert(
+            "Error",
+            "No se encontró NIF en memoria. Inicia sesión manualmente al menos una vez."
+          );
+          return;
+        }
+
+        const resp = await fetch(
+          `http://localhost:3000/api/usuarios/${storedNif}`
+        );
+        const data = await resp.json();
+
+        if (resp.ok) {
+          setUserData({
+            id: data.datos.Idusuario,
+            nombre: data.datos.nombre,
+            primer_apellido: data.datos.primer_apellido,
+            rol: data.datos.rol,
+          });
+          setModalVisible(false);
+          setWelcomeMessage(
+            `¡Bienvenido de nuevo, ${data.datos.nombre} ${data.datos.primer_apellido}!`
+          );
+          setShowWelcome(true);
+          playWelcomeSound();
+        } else {
+          Alert.alert("Error", "No se pudo obtener el usuario.");
+        }
+      } else {
+        Alert.alert("Cancelado", "No se pudo autenticar.");
+      }
+    } catch (e) {
+      console.error("Error biometría:", e);
+      Alert.alert("Error", "Error al usar biometría.");
+    }
+  };
+
   return (
     <ScrollView style={{ flex: 1 }}>
       <Box style={{ flex: 1 }}>
@@ -225,6 +285,10 @@ function PantallaCombinada() {
               </TouchableOpacity>
             </View>
           </View>
+
+          <TouchableOpacity style={styles.button} onPress={loginWithBiometrics}>
+            <Text style={styles.buttonText}>Iniciar con Huella</Text>
+          </TouchableOpacity>
         </Modal>
 
         {/* Contenido principal */}
