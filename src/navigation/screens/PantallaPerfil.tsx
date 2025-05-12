@@ -68,7 +68,7 @@ export default function PantallaPerfil() {
         if (!nif) throw new Error("No se encontró NIF en almacenamiento");
 
         const res = await fetch(
-          `http://localhost:3000/api/usuarios/${nif}`,
+          `http://localhost:3001/api/usuarios/${nif}`,
           {
             credentials: "include",
           }

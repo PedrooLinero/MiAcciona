@@ -74,7 +74,7 @@ export default function PantallaAusencia() {
   useEffect(() => {
     (async () => {
       try {
-        const tiposRes = await fetch("http://localhost:3000/api/tipoAusencia");
+        const tiposRes = await fetch("http://localhost:3001/api/tipoAusencia");
         const tiposJson = await tiposRes.json();
         const tiposData = Array.isArray(tiposJson) ? tiposJson : tiposJson.data;
         // Simulamos los datos ya que no tengo acceso al backend
@@ -97,7 +97,7 @@ export default function PantallaAusencia() {
       try {
         const nif = await AsyncStorage.getItem("nif");
         if (!nif) throw new Error("No se encontró NIF en almacenamiento");
-        const res = await fetch(`http://localhost:3000/api/usuarios/${nif}`, {
+        const res = await fetch(`http://localhost:3001/api/usuarios/${nif}`, {
           credentials: "include",
         });
         const json = await res.json();
