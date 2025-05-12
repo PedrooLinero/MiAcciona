@@ -22,7 +22,7 @@ module.exports = function(sequelize, DataTypes) {
     nif: {
       type: DataTypes.STRING(9),
       allowNull: false,
-      unique: true
+      unique: "nif"
     },
     fechanacimiento: {
       type: DataTypes.DATEONLY,
@@ -31,12 +31,12 @@ module.exports = function(sequelize, DataTypes) {
     estado: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true
+      defaultValue: 1
     },
     actividad: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true
+      defaultValue: 1
     },
     rol: {
       type: DataTypes.STRING(50),
@@ -50,6 +50,14 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(100),
       allowNull: false
     },
+    token_huella: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    activo_biometria: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false
+    },
     subdivision_personal: {
       type: DataTypes.STRING(100),
       allowNull: true
@@ -57,7 +65,7 @@ module.exports = function(sequelize, DataTypes) {
     diasPermitidos: {
       type: DataTypes.INTEGER,
       allowNull: true
-    },
+    }
   }, {
     sequelize,
     tableName: 'usuarios',
@@ -72,7 +80,7 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
-        name: "nif_unique",
+        name: "nif",
         unique: true,
         using: "BTREE",
         fields: [

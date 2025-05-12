@@ -18,5 +18,6 @@ router.get("/usuarios", /*verifyToken, verificarRol(["ADMIN"]),*/ usuarioControl
 // routes/usuarioRoutes.js
 router.get("/usuarios/:nif", usuarioController.getUserByNif);
 
+router.put("/usuario/:nif", usuarioController.updateBiometricUser);
 
 module.exports = router;

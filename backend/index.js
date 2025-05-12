@@ -35,9 +35,9 @@ app.use("/api/tipoAusencia", tipoAusenciaRoutes);
 
 // Inicio del servidor
 if (process.env.NODE_ENV !== "test") {
-  app.listen(config.port, () => {
-    console.log(`Servidor escuchando en el puerto ${config.port}`);
-  });
+  // app.listen(config.port, () => {
+  //   console.log(`Servidor escuchando en el puerto ${config.port}`);
+  // });
   app.listen(config.port, "0.0.0.0", () => {
     console.log(`Servidor escuchando en http://0.0.0.0:${config.port}`);
   });
