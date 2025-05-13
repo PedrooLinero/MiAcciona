@@ -1,4 +1,3 @@
-// index.js (o app.js)
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -7,6 +6,7 @@ const cookieParser = require("cookie-parser");
 // Rutas
 const usuarioRoutes = require("./routes/usuarioRoutes");
 const tipoAusenciaRoutes = require("./routes/tipoAusenciaRoutes");
+const administradorRoutes = require("./routes/administradorRoutes"); // Añadido
 
 // Config
 const config = require("./config/config");
@@ -29,15 +29,13 @@ app.use(
 // Rutas de la API Rest
 app.use("/api", usuarioRoutes);
 app.use("/api/tipoAusencia", tipoAusenciaRoutes);
+app.use("/api", administradorRoutes); // Añadido
 
 // (Opcional) servir estáticos
 // app.use(express.static(path.join(__dirname, "public")));
 
 // Inicio del servidor
 if (process.env.NODE_ENV !== "test") {
-  // app.listen(config.port, () => {
-  //   console.log(`Servidor escuchando en el puerto ${config.port}`);
-  // });
   app.listen(config.port, "0.0.0.0", () => {
     console.log(`Servidor escuchando en http://0.0.0.0:${config.port}`);
   });

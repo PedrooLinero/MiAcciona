@@ -1,9 +1,9 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('tipoAusencia', {
+  const TipoAusencia = sequelize.define('tipo_ausencia', {
     id_tipo: {
       autoIncrement: true,
-      type: DataTypes.INTEGER,
+      type: DataTypes.TINYINT,
       allowNull: false,
       primaryKey: true
     },
@@ -21,18 +21,20 @@ module.exports = function(sequelize, DataTypes) {
         name: "PRIMARY",
         unique: true,
         using: "BTREE",
-        fields: [
-          { name: "id_tipo" },
-        ]
+        fields: [{ name: "id_tipo" }]
       },
       {
         name: "nombre",
         unique: true,
         using: "BTREE",
-        fields: [
-          { name: "nombre" },
-        ]
-      },
+        fields: [{ name: "nombre" }]
+      }
     ]
   });
+
+  TipoAusencia.associate = function(models) {
+    TipoAusencia.hasMany(models.usuario_ausencia, { foreignKey: 'id_tipo', as: 'ausencias' });
+  };
+
+  return TipoAusencia;
 };

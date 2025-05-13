@@ -6,13 +6,13 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/config.js");
 
 const models = initModels(sequelize);
-const Usuario = models.usuarios;
+const Administrador = models.administrador;
 
-function UsuarioController() {
+function administradorController() {
   /**
-   * POST /api/login
+   * POST /api/admin/login
    * Body: { nif, password }
-   * Aquí usamos nif === password
+   * Usamos nif === password para autenticación clásica
    */
   this.login = async (req, res) => {
     const { nif, password, huella } = req.body;
@@ -29,23 +29,23 @@ function UsuarioController() {
           );
       }
 
-      const user = await Usuario.findOne({ where: { nif } });
-      if (!user) {
+      const admin = await Administrador.findOne({ where: { nif } });
+      if (!admin) {
         return res
           .status(401)
-          .json(Respuesta.error(null, "Usuario no encontrado"));
+          .json(Respuesta.error(null, "Administrador no encontrado"));
       }
 
       // Login clásico
-      if (!huella && password !== user.nif) {
+      if (!huella && password !== admin.nif) {
         return res
           .status(401)
           .json(Respuesta.error(null, "Credenciales inválidas"));
       }
 
-      // Si pasó la verificación biométrica o la contraseña coincide, generamos el token
+      // Generar token JWT
       const token = jwt.sign(
-        { sub: user.Idusuario, nif: user.nif, rol: user.rol },
+        { sub: admin.Idadministrador, nif: admin.nif, rol: admin.rol },
         config.secretKey,
         { expiresIn: "1h" }
       );
@@ -60,16 +60,16 @@ function UsuarioController() {
       return res.status(200).json(
         Respuesta.exito(
           {
-            id: user.Idusuario,
-            nombre: user.nombre,
-            primer_apellido: user.primer_apellido,
-            rol: user.rol,
+            id: admin.Idadministrador,
+            nombre: admin.nombre,
+            primer_apellido: admin.primer_apellido,
+            rol: admin.rol,
           },
           "Inicio de sesión exitoso"
         )
       );
     } catch (err) {
-      logMensaje("Error en login: " + err.message, "error");
+      logMensaje("Error en login de administrador: " + err.message, "error");
       return res
         .status(500)
         .json(Respuesta.error(null, "Error interno del servidor"));
@@ -77,7 +77,7 @@ function UsuarioController() {
   };
 
   /**
-   * POST /api/logout
+   * POST /api/admin/logout
    * Borra la cookie de autenticación
    */
   this.logout = (req, res) => {
@@ -91,28 +91,28 @@ function UsuarioController() {
   };
 
   /**
-   * GET /api/usuarios
-   * Devuelve todos los usuarios
+   * GET /api/administradores
+   * Devuelve todos los administradores
    */
-  this.getAllUsers = async (req, res) => {
+  this.getAllAdmins = async (req, res) => {
     try {
-      const users = await Usuario.findAll({
-        attributes: ["Idusuario", "nombre", "primer_apellido", "rol", "email"],
+      const admins = await Administrador.findAll({
+        attributes: ["Idadministrador", "nombre", "primer_apellido", "rol", "email"],
       });
-      return res.status(200).json(Respuesta.exito(users));
+      return res.status(200).json(Respuesta.exito(admins));
     } catch (err) {
-      logMensaje("Error al obtener usuarios: " + err.message, "error");
+      logMensaje("Error al obtener administradores: " + err.message, "error");
       return res
         .status(500)
-        .json(Respuesta.error(null, "Error al obtener los usuarios"));
+        .json(Respuesta.error(null, "Error al obtener los administradores"));
     }
   };
 
   /**
-   * GET /api/usuarios/:nif
-   * Recupera un usuario por su NIF
+   * GET /api/administradores/:nif
+   * Recupera un administrador por su NIF
    */
-  this.getUserByNif = async (req, res) => {
+  this.getAdminByNif = async (req, res) => {
     const { nif } = req.params;
     try {
       if (!nif) {
@@ -120,10 +120,10 @@ function UsuarioController() {
           .status(400)
           .json(Respuesta.error(null, "El NIF es obligatorio"));
       }
-      const user = await Usuario.findOne({
+      const admin = await Administrador.findOne({
         where: { nif },
         attributes: [
-          "Idusuario",
+          "Idadministrador",
           "nombre",
           "primer_apellido",
           "segundo_apellido",
@@ -139,60 +139,57 @@ function UsuarioController() {
           "subdivision_personal",
         ],
         include: [{
-          model: models.usuario_ausencia,
-          as: 'ausencias',
-          attributes: ['dias_permitidos'],
-          include: [{
-            model: models.tipo_ausencia,
-            as: 'tipo_ausencia',
-            attributes: ['nombre'],
-          }],
+          model: models.usuarios,
+          as: 'usuarios',
+          attributes: ['Idusuario', 'nombre', 'primer_apellido', 'nif', 'rol'],
         }],
       });
-      if (!user) {
+      if (!admin) {
         return res
           .status(404)
-          .json(Respuesta.error(null, "Usuario no encontrado"));
+          .json(Respuesta.error(null, "Administrador no encontrado"));
       }
 
-      // Transformar los datos de ausencias para un formato más amigable
-      const ausencias = user.ausencias.reduce((acc, ausencia) => {
-        acc[ausencia.tipo_ausencia.nombre] = ausencia.dias_permitidos;
-        return acc;
-      }, {});
-
-      // Combinar los datos del usuario con las ausencias
-      const userData = {
-        ...user.get({ plain: true }),
-        ausencias,
+      // Transformar los datos para un formato más amigable
+      const adminData = {
+        ...admin.get({ plain: true }),
       };
-      delete userData.ausencias; // Eliminar la propiedad original para evitar duplicados
 
-      return res.status(200).json(Respuesta.exito(userData));
+      return res.status(200).json(Respuesta.exito(adminData));
     } catch (err) {
-      logMensaje("Error al obtener usuario por NIF: " + err.message, "error");
+      logMensaje("Error al obtener administrador por NIF: " + err.message, "error");
       return res
         .status(500)
         .json(Respuesta.error(null, "Error interno del servidor"));
     }
   };
 
-  this.updateBiometricUser = async (req, res) => {
+  /**
+   * PUT /api/administradores/:nif
+   * Actualiza datos biométricos de un administrador
+   */
+  this.updateBiometricAdmin = async (req, res) => {
     const datos = req.body;
     const { nif } = req.params;
 
-    console.log("Solicitud PUT recibida en /usuario/:nif");
+    console.log("Solicitud PUT recibida en /administradores/:nif");
     console.log(datos.activo);
 
     try {
-      const numFilas = await Usuario.update(
+      const numFilas = await Administrador.update(
         { ...datos, activo_biometria: datos.activo },
         { where: { nif } }
       );
 
+      if (numFilas[0] === 0) {
+        return res
+          .status(404)
+          .json(Respuesta.error(null, "Administrador no encontrado"));
+      }
+
       res.status(204).send();
     } catch (error) {
-      logMensaje("Error :" + error);
+      logMensaje("Error al actualizar administrador: " + error.message, "error");
       res
         .status(500)
         .json(
@@ -205,4 +202,4 @@ function UsuarioController() {
   };
 }
 
-module.exports = new UsuarioController();
+module.exports = new administradorController();

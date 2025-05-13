@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  const Usuarios = sequelize.define('usuarios', {
-    Idusuario: {
+  const Administrador = sequelize.define('administrador', {
+    Idadministrador: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -20,7 +20,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     nif: {
-      type: DataTypes.CHAR(9), // Cambiado a CHAR(9) para mayor eficiencia
+      type: DataTypes.CHAR(9),
       allowNull: false,
       unique: "nif"
     },
@@ -29,7 +29,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false
     },
     estado: {
-      type: DataTypes.TINYINT(1), // BOOLEAN puede mapearse a TINYINT(1)
+      type: DataTypes.TINYINT(1),
       allowNull: false,
       defaultValue: 1
     },
@@ -62,21 +62,17 @@ module.exports = function(sequelize, DataTypes) {
     subdivision_personal: {
       type: DataTypes.STRING(100),
       allowNull: true
-    },
-    id_administrador: {
-      type: DataTypes.INTEGER,
-      allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'usuarios',
+    tableName: 'administrador',
     timestamps: false,
     indexes: [
       {
         name: "PRIMARY",
         unique: true,
         using: "BTREE",
-        fields: [{ name: "Idusuario" }]
+        fields: [{ name: "Idadministrador" }]
       },
       {
         name: "nif",
@@ -88,19 +84,13 @@ module.exports = function(sequelize, DataTypes) {
         name: "idx_email",
         using: "BTREE",
         fields: [{ name: "email" }]
-      },
-      {
-        name: "idx_administrador",
-        using: "BTREE",
-        fields: [{ name: "id_administrador" }]
       }
     ]
   });
 
-  Usuarios.associate = function(models) {
-    Usuarios.hasMany(models.usuario_ausencia, { foreignKey: 'id_usuario', as: 'ausencias' });
-    Usuarios.belongsTo(models.administrador, { foreignKey: 'id_administrador', as: 'administrador' });
+  Administrador.associate = function(models) {
+    Administrador.hasMany(models.usuarios, { foreignKey: 'id_administrador', as: 'usuarios' });
   };
 
-  return Usuarios;
+  return Administrador;
 };

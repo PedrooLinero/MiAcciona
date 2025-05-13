@@ -19,7 +19,8 @@
     "plugins": [
       "expo-asset",
       "react-native-edge-to-edge",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-build-properties"
     ],
     "extra": {
       "eas": {

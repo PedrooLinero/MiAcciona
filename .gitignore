@@ -83,3 +83,7 @@ yarn-error.*
 
 # Ignore Gradle build output directory
 build
+
+# Ignore Android Studio specific files
+/android
+/ios

@@ -1,0 +1,15 @@
+POST http://localhost:3001/api/admin/login
+Content-Type: application/json
+
+{
+  "nif": "11122233A",
+  "password": "11122233A"
+}
+
+###logout
+POST http://localhost:3001/api/admin/logout
+Content-Type: application/json
+
+{
+  "nif": "11122233A"
+}
