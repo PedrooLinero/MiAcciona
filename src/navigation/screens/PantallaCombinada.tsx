@@ -383,7 +383,30 @@ function PantallaCombinada() {
                     >
                       <Text style={styles.menuButtonText}>Cerrar Sesión</Text>
                     </TouchableOpacity>
-                    {/* Espacio en blanco para ítems futuros */}
+                    <View style={styles.menuSpacer} />
+
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      // onPress={handleLogout}
+                    >
+                      <Text style={styles.menuButtonText}>Solicitud fichajes</Text>
+                    </TouchableOpacity>
+                    <View style={styles.menuSpacer} />
+
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      // onPress={handleLogout}
+                    >
+                      <Text style={styles.menuButtonText}>Petición de EPI</Text>
+                    </TouchableOpacity>
+                    <View style={styles.menuSpacer} />
+
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      // onPress={handleLogout}
+                    >
+                      <Text style={styles.menuButtonText}>Consultor PLR</Text>
+                    </TouchableOpacity>
                     <View style={styles.menuSpacer} />
                   </View>
                 </Animated.View>
@@ -479,7 +502,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo semitransparente para atenuar el contenido detrás
   },
   menuContainer: {
-    width: "50%", // Ocupa la mitad del ancho (mitad izquierda)
+    width: "70%", // Ocupa la mitad del ancho (mitad izquierda)
     height: "100%", // Ocupa toda la altura
     backgroundColor: "#fff",
     position: "absolute",
@@ -521,7 +544,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   menuSpacer: {
-    flex: 1, // Ocupa el resto del espacio en blanco dentro del contenedor
+    marginBottom: 10, // Ocupa el resto del espacio en blanco dentro del contenedor
   },
   overlay: {
     position: "absolute",
