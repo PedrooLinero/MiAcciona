@@ -18,12 +18,14 @@
     },
     "plugins": [
       "expo-asset",
-      "react-native-edge-to-edge"
+      "react-native-edge-to-edge",
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {
-        "projectId": "4b1a2723-fc9c-4ba3-b1a7-59c991e9e4dd"
+        "projectId": "64aab9c7-9c44-4594-90b6-4dc2b372dfe0"
       }
-    }
+    },
+    "owner": "virginiiamzz"
   }
 }

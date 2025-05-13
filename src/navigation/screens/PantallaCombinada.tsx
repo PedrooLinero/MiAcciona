@@ -20,6 +20,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { ScrollView } from "react-native-gesture-handler";
 import * as LocalAuthentication from "expo-local-authentication";
 import { Platform } from "react-native";
+import * as SecureStore from "expo-secure-store";
 
 type RootStackParamList = {
   Home: undefined;
@@ -79,6 +80,13 @@ function PantallaCombinada() {
     );
     setSound(sound);
     await sound.playAsync();
+  };
+
+  const saveUserSession = async (userId, token) => {
+    await SecureStore.setItemAsync("currentUserId", userId);
+    await SecureStore.setItemAsync("userToken", token, {
+      requireAuthentication: true, // Requiere autenticación biométrica para acceder
+    });
   };
 
   useEffect(() => {
@@ -173,70 +181,161 @@ function PantallaCombinada() {
     }
   };
 
+  // const loginWithBiometrics = async () => {
+  //   try {
+  //     // Verificar si el dispositivo soporta autenticación biométrica
+  //     const hasHardware = await LocalAuthentication.hasHardwareAsync();
+  //     if (!hasHardware) {
+  //       Alert.alert(
+  //         "Error",
+  //         "Este dispositivo no soporta autenticación biométrica."
+  //       );
+  //       console.error("No hay hardware biométrico disponible");
+  //       return;
+  //     }
+
+  //     // Verificar si hay credenciales biométricas registradas
+  //     const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+  //     if (!isEnrolled) {
+  //       Alert.alert(
+  //         "Error",
+  //         "No hay credenciales biométricas registradas en el dispositivo."
+  //       );
+  //       console.error("No hay credenciales biométricas registradas");
+  //       return;
+  //     }
+
+  //     // Intentar autenticación biométrica
+  //     const result = await LocalAuthentication.authenticateAsync({
+  //       promptMessage: "Autenticación biométrica",
+  //       fallbackLabel: "Usar contraseña",
+  //     });
+
+  //     console.log("Resultado de la autenticación:", result);
+
+  //     if (result.success) {
+  //       const storedNif = await AsyncStorage.getItem("nif");
+  //       if (!storedNif) {
+  //         Alert.alert(
+  //           "Error",
+  //           "No se encontró NIF en memoria. Inicia sesión manualmente al menos una vez."
+  //         );
+  //         return;
+  //       }
+
+  //       const resp = await fetch("http://localhost:3001/api/login", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ nif: storedNif, huella: true }),
+  //       });
+  //       const data = await resp.json();
+
+  //       if (resp.ok) {
+  //         setUserData({
+  //           id: data.datos.Idusuario,
+  //           nombre: data.datos.nombre,
+  //           primer_apellido: data.datos.primer_apellido,
+  //           rol: data.datos.rol,
+  //         });
+  //         setModalVisible(false);
+  //         setWelcomeMessage(
+  //           `¡Bienvenido de nuevo, ${data.datos.nombre} ${data.datos.primer_apellido}!`
+  //         );
+  //         setShowWelcome(true);
+  //         playWelcomeSound();
+  //       } else {
+  //         Alert.alert("Error", "No se pudo obtener el usuario.");
+  //       }
+  //     } else {
+  //       Alert.alert("Cancelado", "No se pudo autenticar.");
+  //     }
+  //   } catch (e) {
+  //     console.error("Error en autenticación biométrica:", e);
+  //     Alert.alert(
+  //       "Error",
+  //       "Ocurrió un error durante la autenticación biométrica."
+  //     );
+  //   }
+  // };
+
   const loginWithBiometrics = async () => {
     try {
-      // Verificar si el dispositivo soporta autenticación biométrica
+      const storedNif = await AsyncStorage.getItem("nif");
+      if (!storedNif) {
+        Alert.alert(
+          "Error",
+          "No se encontró NIF en memoria. Inicia sesión manualmente al menos una vez."
+        );
+        return;
+      }
+
+      // Obtener datos del usuario incluyendo activo_biometria
+      const resp = await fetch(
+        `http://localhost:3001/api/usuarios/${storedNif}`
+      );
+      const data = await resp.json();
+
+      if (!resp.ok || !data.datos) {
+        Alert.alert(
+          "Error",
+          "No se pudo verificar la configuración biométrica."
+        );
+        return;
+      }
+
+      if (!data.datos.activo_biometria) {
+        Alert.alert(
+          "Biometría no activada",
+          "Este usuario no tiene activada la autenticación por huella."
+        );
+        return;
+      }
+
+      // Verificar hardware y credenciales biométricas
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       if (!hasHardware) {
         Alert.alert(
           "Error",
           "Este dispositivo no soporta autenticación biométrica."
         );
-        console.error("No hay hardware biométrico disponible");
         return;
       }
 
-      // Verificar si hay credenciales biométricas registradas
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
       if (!isEnrolled) {
-        Alert.alert(
-          "Error",
-          "No hay credenciales biométricas registradas en el dispositivo."
-        );
-        console.error("No hay credenciales biométricas registradas");
+        Alert.alert("Error", "No hay credenciales biométricas registradas.");
         return;
       }
 
-      // Intentar autenticación biométrica
+      // Autenticación biométrica
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: "Autenticación biométrica",
         fallbackLabel: "Usar contraseña",
       });
 
-      console.log("Resultado de la autenticación:", result);
-
       if (result.success) {
-        const storedNif = await AsyncStorage.getItem("nif");
-        if (!storedNif) {
-          Alert.alert(
-            "Error",
-            "No se encontró NIF en memoria. Inicia sesión manualmente al menos una vez."
-          );
-          return;
-        }
-
-        const resp = await fetch("http://localhost:3001/api/login", {
+        const loginResp = await fetch("http://localhost:3001/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ nif: storedNif, huella: true }),
         });
-        const data = await resp.json();
 
-        if (resp.ok) {
+        const loginData = await loginResp.json();
+        if (loginResp.ok) {
           setUserData({
-            id: data.datos.Idusuario,
-            nombre: data.datos.nombre,
-            primer_apellido: data.datos.primer_apellido,
-            rol: data.datos.rol,
+            id: loginData.datos.Idusuario,
+            nombre: loginData.datos.nombre,
+            primer_apellido: loginData.datos.primer_apellido,
+            rol: loginData.datos.rol,
           });
           setModalVisible(false);
           setWelcomeMessage(
-            `¡Bienvenido de nuevo, ${data.datos.nombre} ${data.datos.primer_apellido}!`
+            `¡Bienvenido de nuevo, ${loginData.datos.nombre} ${loginData.datos.primer_apellido}!`
           );
           setShowWelcome(true);
           playWelcomeSound();
         } else {
-          Alert.alert("Error", "No se pudo obtener el usuario.");
+          Alert.alert("Error", "No se pudo iniciar sesión con huella.");
         }
       } else {
         Alert.alert("Cancelado", "No se pudo autenticar.");
@@ -249,7 +348,7 @@ function PantallaCombinada() {
       );
     }
   };
-  
+
   return (
     <ScrollView style={{ flex: 1 }}>
       <Box style={{ flex: 1 }}>
