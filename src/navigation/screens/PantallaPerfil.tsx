@@ -16,7 +16,8 @@ import { Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
-import { Switch } from "@gluestack-ui/themed";
+import { Switch, Alert, AlertIcon, AlertText, CheckCircleIcon } from "@gluestack-ui/themed";
+import { MaterialIcons } from "@expo/vector-icons";
 
 const customTheme = {
   ...DefaultTheme,
@@ -64,6 +65,7 @@ export default function PantallaPerfil() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checked, setChecked] = React.useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -116,12 +118,16 @@ export default function PantallaPerfil() {
     console.log("Response:", response);
 
     if (response.status == 204) {
-      alert("Cambio realizado correctamente");
+      setAlertMessage("Cambio realizado correctamente");
     } else {
       const data = await response.json();
 
-      alert(data.mensaje);
+      setAlertMessage(data.mensaje);
     }
+
+    setTimeout(() => {
+      setAlertMessage("");
+    }, 3000);
   };
 
   return (
@@ -145,6 +151,13 @@ export default function PantallaPerfil() {
               Días restantes: {user.diasPermitidos ?? "N/A"}
             </Text>
           </Appbar.Header>
+
+          {alertMessage && (
+            <Alert action="success" variant="solid">
+              <AlertIcon as={CheckCircleIcon} style={{marginRight: 5}} />
+              <AlertText>{alertMessage}</AlertText>
+            </Alert>
+          )}
 
           <ScrollView
             style={styles.scrollView}
@@ -174,7 +187,18 @@ export default function PantallaPerfil() {
               </View>
             </View>
 
-            <View style={styles.profileContainer}>
+            <View style={styles.biometricContainer}>
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <MaterialIcons name="fingerprint" size={30} color="black" />
+                <Text style={styles.label}>Habilitar biometría</Text>
+              </View>
               <Switch
                 size="md"
                 defaultValue={checked}
@@ -275,5 +299,22 @@ const styles = StyleSheet.create({
     color: "#666",
     flexShrink: 1,
     textAlign: "right",
+  },
+  biometricContainer: {
+    backgroundColor: "#FFF",
+    width: windowWidth * 0.9,
+    padding: 20,
+    borderRadius: 15,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginBottom: 10,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
   },
 });

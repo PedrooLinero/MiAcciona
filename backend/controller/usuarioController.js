@@ -108,74 +108,79 @@ function UsuarioController() {
     }
   };
 
-  /**
-   * GET /api/usuarios/:nif
-   * Recupera un usuario por su NIF
-   */
-  this.getUserByNif = async (req, res) => {
-    const { nif } = req.params;
-    try {
-      if (!nif) {
-        return res
-          .status(400)
-          .json(Respuesta.error(null, "El NIF es obligatorio"));
-      }
-      const user = await Usuario.findOne({
-        where: { nif },
-        attributes: [
-          "Idusuario",
-          "nombre",
-          "primer_apellido",
-          "segundo_apellido",
-          "nif",
-          "fechanacimiento",
-          "estado",
-          "actividad",
-          "rol",
-          "telefono",
-          "email",
-          "token_huella",
-          "activo_biometria",
-          "subdivision_personal",
-        ],
-        include: [{
-          model: models.usuario_ausencia,
-          as: 'ausencias',
-          attributes: ['dias_permitidos'],
-          include: [{
-            model: models.tipo_ausencia,
-            as: 'tipo_ausencia',
-            attributes: ['nombre'],
-          }],
-        }],
-      });
-      if (!user) {
-        return res
-          .status(404)
-          .json(Respuesta.error(null, "Usuario no encontrado"));
-      }
-
-      // Transformar los datos de ausencias para un formato más amigable
-      const ausencias = user.ausencias.reduce((acc, ausencia) => {
-        acc[ausencia.tipo_ausencia.nombre] = ausencia.dias_permitidos;
-        return acc;
-      }, {});
-
-      // Combinar los datos del usuario con las ausencias
-      const userData = {
-        ...user.get({ plain: true }),
-        ausencias,
-      };
-      delete userData.ausencias; // Eliminar la propiedad original para evitar duplicados
-
-      return res.status(200).json(Respuesta.exito(userData));
-    } catch (err) {
-      logMensaje("Error al obtener usuario por NIF: " + err.message, "error");
+/**
+ * GET /api/usuarios/:nif
+ * Recupera un usuario por su NIF
+ */
+this.getUserByNif = async (req, res) => {
+  const { nif } = req.params;
+  try {
+    if (!nif) {
       return res
-        .status(500)
-        .json(Respuesta.error(null, "Error interno del servidor"));
+        .status(400)
+        .json(Respuesta.error(null, "El NIF es obligatorio"));
     }
-  };
+
+    const user = await Usuario.findOne({
+      where: { nif },
+      attributes: [
+        "Idusuario",
+        "nombre",
+        "primer_apellido",
+        "segundo_apellido",
+        "nif",
+        "fechanacimiento",
+        "estado",
+        "actividad",
+        "rol",
+        "telefono",
+        "email",
+        "token_huella",
+        "activo_biometria",
+        "subdivision_personal",
+      ],
+      include: [{
+        association: 'ausencias', // Usar el alias de la asociación definida en el modelo
+        attributes: ['dias_permitidos'],
+        include: [{
+          association: 'tipo_ausencia', // Alias de la asociación en usuario_ausencia
+          attributes: ['nombre'],
+        }],
+      }],
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json(Respuesta.error(null, "Usuario no encontrado"));
+    }
+
+    // Transformar las ausencias a un objeto clave-valor
+    const ausenciasTransformadas = user.ausencias.reduce((acc, ausencia) => {
+      if (ausencia.tipo_ausencia) {
+        acc[ausencia.tipo_ausencia.nombre] = ausencia.dias_permitidos;
+      }
+      return acc;
+    }, {});
+
+    // Construir el objeto de respuesta final
+    const userData = {
+      ...user.get({ plain: true }),
+      ausencias: ausenciasTransformadas
+    };
+
+    // Eliminar la propiedad original de ausencias que ya no necesitamos
+    delete userData.ausencias;
+
+    return res.status(200).json(Respuesta.exito(userData));
+    
+  } catch (err) {
+    logMensaje("Error al obtener usuario por NIF: " + err.message, "error");
+    return res
+      .status(500)
+      .json(Respuesta.error(null, "Error interno del servidor"));
+  }
+};
 
   this.updateBiometricUser = async (req, res) => {
     const datos = req.body;

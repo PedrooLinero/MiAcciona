@@ -181,83 +181,6 @@ function PantallaCombinada() {
     }
   };
 
-  // const loginWithBiometrics = async () => {
-  //   try {
-  //     // Verificar si el dispositivo soporta autenticación biométrica
-  //     const hasHardware = await LocalAuthentication.hasHardwareAsync();
-  //     if (!hasHardware) {
-  //       Alert.alert(
-  //         "Error",
-  //         "Este dispositivo no soporta autenticación biométrica."
-  //       );
-  //       console.error("No hay hardware biométrico disponible");
-  //       return;
-  //     }
-
-  //     // Verificar si hay credenciales biométricas registradas
-  //     const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-  //     if (!isEnrolled) {
-  //       Alert.alert(
-  //         "Error",
-  //         "No hay credenciales biométricas registradas en el dispositivo."
-  //       );
-  //       console.error("No hay credenciales biométricas registradas");
-  //       return;
-  //     }
-
-  //     // Intentar autenticación biométrica
-  //     const result = await LocalAuthentication.authenticateAsync({
-  //       promptMessage: "Autenticación biométrica",
-  //       fallbackLabel: "Usar contraseña",
-  //     });
-
-  //     console.log("Resultado de la autenticación:", result);
-
-  //     if (result.success) {
-  //       const storedNif = await AsyncStorage.getItem("nif");
-  //       if (!storedNif) {
-  //         Alert.alert(
-  //           "Error",
-  //           "No se encontró NIF en memoria. Inicia sesión manualmente al menos una vez."
-  //         );
-  //         return;
-  //       }
-
-  //       const resp = await fetch("http://localhost:3001/api/login", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ nif: storedNif, huella: true }),
-  //       });
-  //       const data = await resp.json();
-
-  //       if (resp.ok) {
-  //         setUserData({
-  //           id: data.datos.Idusuario,
-  //           nombre: data.datos.nombre,
-  //           primer_apellido: data.datos.primer_apellido,
-  //           rol: data.datos.rol,
-  //         });
-  //         setModalVisible(false);
-  //         setWelcomeMessage(
-  //           `¡Bienvenido de nuevo, ${data.datos.nombre} ${data.datos.primer_apellido}!`
-  //         );
-  //         setShowWelcome(true);
-  //         playWelcomeSound();
-  //       } else {
-  //         Alert.alert("Error", "No se pudo obtener el usuario.");
-  //       }
-  //     } else {
-  //       Alert.alert("Cancelado", "No se pudo autenticar.");
-  //     }
-  //   } catch (e) {
-  //     console.error("Error en autenticación biométrica:", e);
-  //     Alert.alert(
-  //       "Error",
-  //       "Ocurrió un error durante la autenticación biométrica."
-  //     );
-  //   }
-  // };
-
   const loginWithBiometrics = async () => {
     try {
       const storedNif = await AsyncStorage.getItem("nif");
@@ -460,7 +383,30 @@ function PantallaCombinada() {
                     >
                       <Text style={styles.menuButtonText}>Cerrar Sesión</Text>
                     </TouchableOpacity>
-                    {/* Espacio en blanco para ítems futuros */}
+                    <View style={styles.menuSpacer} />
+
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      // onPress={handleLogout}
+                    >
+                      <Text style={styles.menuButtonText}>Solicitud fichajes</Text>
+                    </TouchableOpacity>
+                    <View style={styles.menuSpacer} />
+
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      // onPress={handleLogout}
+                    >
+                      <Text style={styles.menuButtonText}>Petición de EPI</Text>
+                    </TouchableOpacity>
+                    <View style={styles.menuSpacer} />
+
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      // onPress={handleLogout}
+                    >
+                      <Text style={styles.menuButtonText}>Consultor PLR</Text>
+                    </TouchableOpacity>
                     <View style={styles.menuSpacer} />
                   </View>
                 </Animated.View>
@@ -556,7 +502,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo semitransparente para atenuar el contenido detrás
   },
   menuContainer: {
-    width: "50%", // Ocupa la mitad del ancho (mitad izquierda)
+    width: "70%", // Ocupa la mitad del ancho (mitad izquierda)
     height: "100%", // Ocupa toda la altura
     backgroundColor: "#fff",
     position: "absolute",
@@ -598,7 +544,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   menuSpacer: {
-    flex: 1, // Ocupa el resto del espacio en blanco dentro del contenedor
+    marginBottom: 10, // Ocupa el resto del espacio en blanco dentro del contenedor
   },
   overlay: {
     position: "absolute",

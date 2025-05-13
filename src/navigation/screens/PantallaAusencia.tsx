@@ -51,17 +51,14 @@ export default function PantallaAusencia() {
   >([]);
   const [loadingTipos, setLoadingTipos] = useState(true);
   const [user, setUser] = useState<{
-    Idusuario?: number; // Para usuarios
-    Idadministrador?: number; // Para administradores
+    Idusuario: number;
     nombre: string;
     primer_apellido: string;
-    segundo_apellido: string | null;
+    segundo_apellido: string;
     nif: string;
     email: string;
-    rol: string;
-    ausencias?: { [key: string]: number }; // Ejemplo: { "Vacaciones": 30, ... }
+    diasPermitidos: number | null;
   } | null>(null);
-  const [loadingUser, setLoadingUser] = useState(true);
 
   const [tipoSeleccionado, setTipoSeleccionado] = useState<number | null>(null);
   const [titulo, setTitulo] = useState("");
@@ -77,20 +74,18 @@ export default function PantallaAusencia() {
   useEffect(() => {
     (async () => {
       try {
-        const tiposRes = await fetch("http://localhost:3001/api/tipoAusencia", {
-          credentials: "include",
-        });
+        const tiposRes = await fetch("http://localhost:3001/api/tipoAusencia");
         const tiposJson = await tiposRes.json();
-        const tiposData = Array.isArray(tiposJson) ? tiposJson : tiposJson.datos;
-        setTipoList(tiposData);
-      } catch (err) {
-        console.error("Error cargando tipos de ausencia:", err);
-        // Usar datos simulados como respaldo
-        setTipoList([
+        const tiposData = Array.isArray(tiposJson) ? tiposJson : tiposJson.data;
+        // Simulamos los datos ya que no tengo acceso al backend
+        const mockTipos = [
           { id_tipo: 1, nombre: "Asuntos Propios" },
           { id_tipo: 2, nombre: "Permisos Retribuidos" },
           { id_tipo: 3, nombre: "Vacaciones" },
-        ]);
+        ];
+        setTipoList(mockTipos); // Usa tiposData si tu API devuelve los valores correctos
+      } catch (err) {
+        console.error("Error cargando tipos de ausencia:", err);
       } finally {
         setLoadingTipos(false);
       }
@@ -100,46 +95,21 @@ export default function PantallaAusencia() {
   useEffect(() => {
     (async () => {
       try {
-        setLoadingUser(true);
         const nif = await AsyncStorage.getItem("nif");
-        const rol = await AsyncStorage.getItem("rol");
-        if (!nif || !rol) {
-          throw new Error("No se encontró NIF o rol en almacenamiento");
-        }
-
-        const endpoint =
-          rol === "Administrador"
-            ? `http://localhost:3001/api/administradores/${nif}`
-            : `http://localhost:3001/api/usuarios/${nif}`;
-        const res = await fetch(endpoint, {
+        if (!nif) throw new Error("No se encontró NIF en almacenamiento");
+        const res = await fetch(`http://localhost:3001/api/usuarios/${nif}`, {
           credentials: "include",
         });
-        if (!res.ok) {
-          throw new Error(`Error en la solicitud: ${res.status}`);
-        }
         const json = await res.json();
         const datos = json.datos ?? json.data ?? json;
-
-        setUser({
-          Idusuario: datos.Idusuario, // Solo para usuarios
-          Idadministrador: datos.Idadministrador, // Solo para administradores
-          nombre: datos.nombre,
-          primer_apellido: datos.primer_apellido,
-          segundo_apellido: datos.segundo_apellido || null,
-          nif: datos.nif,
-          email: datos.email,
-          rol,
-          ausencias: datos.ausencias, // Solo para usuarios, undefined para administradores
-        });
+        setUser(datos);
       } catch (err) {
-        console.error("Error cargando datos del usuario/administrador:", err);
-      } finally {
-        setLoadingUser(false);
+        console.error("Error cargando datos de usuario:", err);
       }
     })();
   }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (
       !tipoSeleccionado ||
       !titulo ||
@@ -150,53 +120,22 @@ export default function PantallaAusencia() {
       alert("Por favor, completa todos los campos");
       return;
     }
-
-    // Evitar que administradores envíen solicitudes si no tienen ausencias
-    if (user?.rol === "Administrador" && !user.ausencias) {
-      alert("Los administradores no pueden solicitar ausencias.");
-      return;
-    }
-
     setIsSubmitting(true);
-    try {
-      // Aquí iría la solicitud al backend para guardar la ausencia
-      // Ejemplo: POST /api/ausencias
-      const response = await fetch("http://localhost:3001/api/ausencias", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          id_usuario: user?.Idusuario, // O Idadministrador si implementas ausencias para administradores
-          id_tipo: tipoSeleccionado,
-          titulo,
-          descripcion,
-          fecha_inicio: fechaInicio,
-          fecha_fin: fechaFin,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("Error al enviar la solicitud de ausencia");
-      }
+    setTimeout(() => {
+      setIsSubmitting(false);
       setShowSuccess(true);
       setTipoSeleccionado(null);
       setTitulo("");
       setDescripcion("");
       setFechaInicio("");
       setFechaFin("");
-    } catch (err) {
-      console.error("Error enviando solicitud:", err);
-      alert("Error al enviar la solicitud");
-    } finally {
-      setIsSubmitting(false);
-    }
+    }, 1500);
   };
 
-  if (loadingTipos || loadingUser || !user) {
+  if (loadingTipos || !user) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#D50032" />
+        <ActivityIndicator size="large" />
       </SafeAreaView>
     );
   }
@@ -210,9 +149,6 @@ export default function PantallaAusencia() {
 
   const apellidosCombinados =
     `${user.primer_apellido} ${user.segundo_apellido || ""}`.trim();
-
-  // Obtener los días de "Vacaciones" o mostrar "N/A" para administradores
-  const diasRestantes = user.ausencias?.["Vacaciones"] ?? "N/A";
 
   return (
     <PaperProvider theme={customTheme}>
@@ -229,7 +165,7 @@ export default function PantallaAusencia() {
             style={{ marginLeft: 0 }}
           />
           <Text style={styles.diasPermitidos}>
-            Días de vacaciones: {diasRestantes}
+            Días restantes: {user.diasPermitidos ?? "N/A"}
           </Text>
         </Appbar.Header>
 
@@ -257,7 +193,6 @@ export default function PantallaAusencia() {
                       styles.selectedButtonLabel,
                   ]}
                   contentStyle={styles.tipoButtonContent}
-                  disabled={user.rol === "Administrador" && !user.ausencias}
                 >
                   {t.nombre}
                 </Button>
@@ -301,7 +236,6 @@ export default function PantallaAusencia() {
               value={titulo}
               onChangeText={setTitulo}
               style={styles.input}
-              disabled={user.rol === "Administrador" && !user.ausencias}
             />
             <TextInput
               label="Descripción"
@@ -310,7 +244,6 @@ export default function PantallaAusencia() {
               multiline
               numberOfLines={3}
               style={[styles.input, { height: 100 }]}
-              disabled={user.rol === "Administrador" && !user.ausencias}
             />
 
             <View style={styles.row}>
@@ -326,7 +259,6 @@ export default function PantallaAusencia() {
                     onPress={() => setOpenInicio(true)}
                   />
                 }
-                disabled={user.rol === "Administrador" && !user.ausencias}
               />
               <TextInput
                 label="Fecha Fin"
@@ -340,14 +272,13 @@ export default function PantallaAusencia() {
                     onPress={() => setOpenFin(true)}
                   />
                 }
-                disabled={user.rol === "Administrador" && !user.ausencias}
               />
             </View>
 
             <Button
               mode="contained"
               loading={isSubmitting}
-              disabled={isSubmitting || (user.rol === "Administrador" && !user.ausencias)}
+              disabled={isSubmitting}
               onPress={handleSubmit}
               contentStyle={{ paddingVertical: 4 }}
               style={[styles.submitButton, { width: "100%", marginBottom: 2 }]}

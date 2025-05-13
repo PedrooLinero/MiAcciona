@@ -26,6 +26,11 @@ app.use(
   })
 );
 
+// En tu archivo principal (app.js o server.js)
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // Responde con "No Content"
+});
+
 // Rutas de la API Rest
 app.use("/api", usuarioRoutes);
 app.use("/api/tipoAusencia", tipoAusenciaRoutes);
