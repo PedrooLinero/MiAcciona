@@ -21,6 +21,10 @@ import { ScrollView } from "react-native-gesture-handler";
 import * as LocalAuthentication from "expo-local-authentication";
 import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import cerrar_sesion from "../../assets/iconos/cerrar_sesion.png";
+import solicitud_fichajes from "../../assets/iconos/solicitud_fichajes.png";
+import peticion_epi from "../../assets/iconos/peticion_epi.png";
+import consultor_plr from "../../assets/iconos/consultor_plr.png";
 
 type RootStackParamList = {
   Home: undefined;
@@ -381,6 +385,10 @@ function PantallaCombinada() {
                       style={styles.menuButton}
                       onPress={handleLogout}
                     >
+                      <Image
+                        source={cerrar_sesion}
+                        style={{ width: 25, height: 25 }}
+                      />
                       <Text style={styles.menuButtonText}>Cerrar Sesión</Text>
                     </TouchableOpacity>
                     <View style={styles.menuSpacer} />
@@ -389,7 +397,13 @@ function PantallaCombinada() {
                       style={styles.menuButton}
                       // onPress={handleLogout}
                     >
-                      <Text style={styles.menuButtonText}>Solicitud fichajes</Text>
+                      <Image
+                        source={solicitud_fichajes}
+                        style={{ width: 25, height: 25 }}
+                      />
+                      <Text style={styles.menuButtonText}>
+                        Solicitud fichajes
+                      </Text>
                     </TouchableOpacity>
                     <View style={styles.menuSpacer} />
 
@@ -397,6 +411,10 @@ function PantallaCombinada() {
                       style={styles.menuButton}
                       // onPress={handleLogout}
                     >
+                      <Image
+                        source={peticion_epi}
+                        style={{ width: 25, height: 25 }}
+                      />
                       <Text style={styles.menuButtonText}>Petición de EPI</Text>
                     </TouchableOpacity>
                     <View style={styles.menuSpacer} />
@@ -405,6 +423,10 @@ function PantallaCombinada() {
                       style={styles.menuButton}
                       // onPress={handleLogout}
                     >
+                      <Image
+                        source={consultor_plr}
+                        style={{ width: 25, height: 25 }}
+                      />
                       <Text style={styles.menuButtonText}>Consultor PLR</Text>
                     </TouchableOpacity>
                     <View style={styles.menuSpacer} />
@@ -537,6 +559,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   menuButtonText: {
     fontSize: 18,
