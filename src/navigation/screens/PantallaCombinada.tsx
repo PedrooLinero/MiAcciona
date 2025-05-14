@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
   Alert,
+  Linking,
 } from "react-native";
 import { Appbar, Button, Divider, Snackbar } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,6 +30,7 @@ import incidencias from "../../assets/iconos/incidencias.png";
 import ausencia from "../../assets/iconos/ausencia.png";
 import asistente_virtual from "../../assets/iconos/asistente_virtual.png";
 import flecha_preguntasFrecuentes from "../../assets/iconos/flecha_preguntasFrecuentes.png";
+import saber_mas from "../../assets/iconos/saber_mas.png";
 import { MaterialIcons } from "@expo/vector-icons";
 import Carousel from "react-native-reanimated-carousel";
 import { useWindowDimensions } from "react-native";
@@ -445,7 +447,9 @@ function PantallaCombinada() {
                         source={consultor_plr}
                         style={{ width: 25, height: 25 }}
                       />
-                      <Text style={styles.menuButtonText}>Documentación PLR</Text>
+                      <Text style={styles.menuButtonText}>
+                        Documentación PLR
+                      </Text>
                     </TouchableOpacity>
                     <View style={styles.menuSpacer} />
                   </View>
@@ -548,7 +552,19 @@ function PantallaCombinada() {
                     styles.quickActionButton,
                     { width: windowWidth / 3.35 },
                   ]}
-                  onPress={() => navigation.navigate("")}
+                  onPress={() => {
+                    const phoneNumber = "932075053";
+                    const url = `whatsapp://send?phone=${phoneNumber}`;
+
+                    Linking.canOpenURL(url).then((supported) => {
+                      if (supported) {
+                        Linking.openURL(url);
+                      } else {
+                        const webUrl = `https://wa.me/${phoneNumber}`;
+                        Linking.openURL(webUrl);
+                      }
+                    });
+                  }}
                 >
                   <View
                     style={{
@@ -651,21 +667,30 @@ function PantallaCombinada() {
                 </View>
               </View>
             </View>
-            <View style={styles.infoContainer}>
+            <View style={{ marginBottom: 30 }}>
               <Text style={styles.sectionTitle}>Acerca de MiAcciona</Text>
-              <Text style={styles.infoText}>
-                MiAcciona es tu herramienta para simplificar la gestión diaria
-                en Acciona. Reporta incidencias, consulta reportes, planifica
-                tus vacaciones... desde un solo lugar.
-              </Text>
-              <Button
-                mode="contained"
-                style={styles.infoButton}
-                labelStyle={styles.infoButtonLabel}
-                contentStyle={styles.infoButtonContent}
-              >
-                Saber más
-              </Button>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoText}>
+                  MiAcciona es tu herramienta para simplificar la gestión diaria
+                  en Acciona. Reporta incidencias, consulta reportes, planifica
+                  tus vacaciones... desde un solo lugar.
+                </Text>
+                <View style={{display: "flex", alignItems: "center", flexDirection: "row", gap: 10, paddingLeft: 10, paddingBottom: 10}}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: "#D50032",
+                      fontWeight: 600
+                    }}
+                  >
+                    Saber más
+                  </Text>
+                  <Image
+                    source={saber_mas}
+                    style={{ width: 18, height: 18 }}
+                  ></Image>
+                </View>
+              </View>
             </View>
           </>
         )}
@@ -919,14 +944,8 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   infoContainer: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    width: "95%",
+    backgroundColor: "white",
+    borderRadius: 10,
     marginLeft: 10,
     marginRight: 10,
   },
@@ -934,6 +953,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
     marginBottom: 10,
+    padding: 10,
+    marginTop: 10,
   },
   infoButton: {
     backgroundColor: "#D50032",
@@ -955,7 +976,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   quickActionsContainer: {
-    marginBottom: 40,
+    marginBottom: 20,
     width: "100%",
   },
   sectionTitle: {
