@@ -26,6 +26,9 @@ import solicitud_fichajes from "../../assets/iconos/solicitud_fichajes.png";
 import peticion_epi from "../../assets/iconos/peticion_epi.png";
 import consultor_plr from "../../assets/iconos/consultor_plr.png";
 import { MaterialIcons } from "@expo/vector-icons";
+import Carousel from "react-native-reanimated-carousel";
+import { useWindowDimensions } from "react-native";
+import logoAcciona from "../../assets/favicon.png";
 
 type RootStackParamList = {
   Home: undefined;
@@ -42,7 +45,7 @@ function PantallaCombinada() {
     new Animated.Value(-Dimensions.get("window").width / 2)
   ).current;
 
-  const windowWidth = Dimensions.get("window").width;
+  const { width: windowWidth } = useWindowDimensions();
 
   const [userData, setUserData] = useState<UserData | null>(null);
   const [nif, setNif] = useState("");
@@ -62,6 +65,14 @@ function PantallaCombinada() {
   const [biometricData, setBiometricData] = useState({});
 
   const navigation = useNavigation<HomeScreenProp>();
+
+  const width = Dimensions.get("window").width;
+
+  const images = [
+    require("../../assets/imagenes/carrusel_1.webp"),
+    require("../../assets/imagenes/carrusel_2.jpg"),
+    require("../../assets/imagenes/carrusel_3.jpg"),
+  ];
 
   interface UserData {
     id: number;
@@ -337,7 +348,7 @@ function PantallaCombinada() {
                 onPress={loginWithBiometrics}
               >
                 <MaterialIcons name="fingerprint" size={25} color="#D50032" />
-                <Text style={{color: "#D50032"}}>Acceder con huella</Text>
+                <Text style={{ color: "#D50032" }}>Acceder con huella</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -368,7 +379,7 @@ function PantallaCombinada() {
               />
             </Appbar.Header>
 
-            <Modal visible={menuVisible} transparent animationType="none">
+            <Modal visible={menuVisible} transparent animationType="fade">
               <View style={styles.menuOverlay}>
                 <Animated.View
                   style={[
@@ -438,18 +449,36 @@ function PantallaCombinada() {
               </View>
             </Modal>
 
-            <View style={styles.logoContainer}>
-              <Image
-                source={require("./../../assets/Logo_aplicacion.png")}
-                style={styles.logo}
-              />
-            </View>
+            {/* <Carousel
+                width={width}
+                height={220}
+                data={images}
+                autoPlay
+                scrollAnimationDuration={3000}
+                renderItem={({ item }) => (
+                  <Image
+                    source={item}
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                )}
+              /> */}
+
             <View style={styles.welcomeContainer}>
-              <Text style={styles.welcomeText}>¡Bienvenido a MiAcciona!</Text>
-              <Text style={styles.welcomeSubtitle}>
-                Gestiona tus incidencias, reportes y vacaciones de manera
-                eficiente.
-              </Text>
+              <View style={styles.welcomeLogo}>
+                <Image
+                  style={{ width: 250, height: 80 }}
+                  source={logoAcciona}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={styles.welcomeDescription}>
+                <Text style={styles.welcomeText}>¡Bienvenido a MiAcciona!</Text>
+                <Text style={styles.welcomeSubtitle}>
+                  Tu portal personal para gestionar todos tus recursos. Accede a
+                  la información de la empresa, comunica incidencias, gestiona
+                  ausencias y obtén asistencia siempre que lo necesites.
+                </Text>
+              </View>
             </View>
             <View style={styles.quickActionsContainer}>
               <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
@@ -691,18 +720,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   welcomeContainer: {
-    marginBottom: 30,
+    margin: 10,
+    marginBottom: 20,  
+    alignItems: "center",
+    borderRadius: 10,
+    backgroundColor: "white",
+    overflow: 'hidden', 
+  },
+  welcomeLogo: {
+    backgroundColor: "#D50032",
+    width: "100%",
+    justifyContent: "center",
+    height: 120,  // Altura fija recomendada
     alignItems: "center",
   },
+  welcomeDescription: {
+    padding: 15,
+    paddingBottom: 15,  
+    borderTopWidth: 0,  
+    width: '100%',
+  },
   welcomeText: {
-    fontSize: 24,
+    fontSize: 24, 
     fontWeight: "bold",
     color: "#333",
+    marginBottom: 8, 
   },
   welcomeSubtitle: {
     fontSize: 16,
     color: "#666",
-    marginTop: 10,
+    lineHeight: 20,  
   },
   title: {
     fontSize: 18,
