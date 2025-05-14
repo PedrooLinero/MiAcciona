@@ -53,53 +53,58 @@ export default function PantallaAusencia() {
   const [user, setUser] = useState<{
     Idusuario: number;
     nombre: string;
-    primer_apellido: string;
-    segundo_apellido: string;
+    apellidos: string;
     nif: string;
     email: string;
-    diasPermitidos: number | null;
+    dias_por_tipo: { [key: string]: number };
   } | null>(null);
 
-  const [tipoSeleccionado, setTipoSeleccionado] = useState<number | null>(null);
+  const [tipoSeleccionado, setTipoSeleccionado] = useState<{
+    id_tipo: number;
+    nombre: string;
+  } | null>(null);
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
+  const [fechaInicio, setFechaInicio] = useState<Date | null>(null);
+  const [fechaFin, setFechaFin] = useState<Date | null>(null);
   const [openInicio, setOpenInicio] = useState(false);
   const [openFin, setOpenFin] = useState(false);
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Cargar los tipos de ausencia
   useEffect(() => {
     (async () => {
       try {
         const tiposRes = await fetch("http://localhost:3001/api/tipoAusencia");
         const tiposJson = await tiposRes.json();
         const tiposData = Array.isArray(tiposJson) ? tiposJson : tiposJson.data;
-        // Simulamos los datos ya que no tengo acceso al backend
-        const mockTipos = [
-          { id_tipo: 1, nombre: "Asuntos Propios" },
-          { id_tipo: 2, nombre: "Permisos Retribuidos" },
-          { id_tipo: 3, nombre: "Vacaciones" },
-        ];
-        setTipoList(mockTipos); // Usa tiposData si tu API devuelve los valores correctos
+        setTipoList(tiposData);
       } catch (err) {
         console.error("Error cargando tipos de ausencia:", err);
+        const mockTipos = [
+          { id_tipo: 1, nombre: "Asuntos propios" },
+          { id_tipo: 2, nombre: "Permisos retribuidos" },
+          { id_tipo: 3, nombre: "Vacaciones" },
+        ];
+        setTipoList(mockTipos);
       } finally {
         setLoadingTipos(false);
       }
     })();
   }, []);
 
+  // Cargar los datos del usuario
   useEffect(() => {
     (async () => {
       try {
         const nif = await AsyncStorage.getItem("nif");
         if (!nif) throw new Error("No se encontró NIF en almacenamiento");
-        const res = await fetch(`http://localhost:3001/api/usuarios/${nif}`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `http://localhost:3001/api/usuarios/${nif}/ausencias`,
+          { credentials: "include" }
+        );
         const json = await res.json();
         const datos = json.datos ?? json.data ?? json;
         setUser(datos);
@@ -127,10 +132,20 @@ export default function PantallaAusencia() {
       setTipoSeleccionado(null);
       setTitulo("");
       setDescripcion("");
-      setFechaInicio("");
-      setFechaFin("");
+      setFechaInicio(null);
+      setFechaFin(null);
     }, 1500);
   };
+
+  const formatDateToLocal = (date: Date | null): string => {
+    if (!date) return "";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const today = new Date();
 
   if (loadingTipos || !user) {
     return (
@@ -139,16 +154,6 @@ export default function PantallaAusencia() {
       </SafeAreaView>
     );
   }
-
-  const formatDateToLocal = (date: Date): string => {
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  const apellidosCombinados =
-    `${user.primer_apellido} ${user.segundo_apellido || ""}`.trim();
 
   return (
     <PaperProvider theme={customTheme}>
@@ -165,7 +170,10 @@ export default function PantallaAusencia() {
             style={{ marginLeft: 0 }}
           />
           <Text style={styles.diasPermitidos}>
-            Días restantes: {user.diasPermitidos ?? "N/A"}
+            Días restantes:{" "}
+            {tipoSeleccionado
+              ? (user.dias_por_tipo[tipoSeleccionado.nombre] ?? "N/A")
+              : "N/A"}
           </Text>
         </Appbar.Header>
 
@@ -182,14 +190,15 @@ export default function PantallaAusencia() {
                 <Button
                   key={t.id_tipo}
                   mode="outlined"
-                  onPress={() => setTipoSeleccionado(t.id_tipo)}
+                  onPress={() => setTipoSeleccionado(t)}
                   style={[
                     styles.tipoButton,
-                    tipoSeleccionado === t.id_tipo && styles.selectedButton,
+                    tipoSeleccionado?.id_tipo === t.id_tipo &&
+                      styles.selectedButton,
                   ]}
                   labelStyle={[
                     styles.tipoButtonLabel,
-                    tipoSeleccionado === t.id_tipo &&
+                    tipoSeleccionado?.id_tipo === t.id_tipo &&
                       styles.selectedButtonLabel,
                   ]}
                   contentStyle={styles.tipoButtonContent}
@@ -210,7 +219,7 @@ export default function PantallaAusencia() {
               />
               <TextInput
                 label="Apellidos"
-                value={apellidosCombinados}
+                value={user.apellidos}
                 disabled
                 style={[styles.input, styles.halfInput]}
               />
@@ -249,7 +258,7 @@ export default function PantallaAusencia() {
             <View style={styles.row}>
               <TextInput
                 label="Fecha Inicio"
-                value={fechaInicio}
+                value={formatDateToLocal(fechaInicio)}
                 onFocus={() => setOpenInicio(true)}
                 showSoftInputOnFocus={false}
                 style={[styles.input, styles.halfInput]}
@@ -262,7 +271,7 @@ export default function PantallaAusencia() {
               />
               <TextInput
                 label="Fecha Fin"
-                value={fechaFin}
+                value={formatDateToLocal(fechaFin)}
                 onFocus={() => setOpenFin(true)}
                 showSoftInputOnFocus={false}
                 style={[styles.input, styles.halfInput]}
@@ -294,16 +303,15 @@ export default function PantallaAusencia() {
           mode="single"
           visible={openInicio}
           onDismiss={() => setOpenInicio(false)}
-          date={fechaInicio ? new Date(fechaInicio) : undefined}
+          date={fechaInicio || undefined}
           onConfirm={({ date }) => {
             setOpenInicio(false);
-            if (date) {
-              setFechaInicio(formatDateToLocal(date));
-            }
+            if (date) setFechaInicio(date);
           }}
           saveLabel="Guardar"
           label="Seleccionar fecha de inicio"
           animationType="slide"
+          validRange={{ startDate: today }}
         />
 
         <DatePickerModal
@@ -311,19 +319,15 @@ export default function PantallaAusencia() {
           mode="single"
           visible={openFin}
           onDismiss={() => setOpenFin(false)}
-          date={fechaFin ? new Date(fechaFin) : undefined}
+          date={fechaFin || undefined}
           onConfirm={({ date }) => {
             setOpenFin(false);
-            if (date) {
-              setFechaFin(formatDateToLocal(date));
-            }
+            if (date) setFechaFin(date);
           }}
           saveLabel="Guardar"
           label="Seleccionar fecha de fin"
-          validRange={{
-            startDate: fechaInicio ? new Date(fechaInicio) : undefined,
-          }}
           animationType="slide"
+          validRange={{ startDate: fechaInicio || today }}
         />
 
         <Snackbar

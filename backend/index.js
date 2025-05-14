@@ -31,6 +31,12 @@ app.get('/favicon.ico', (req, res) => {
   res.status(204).end(); // Responde con "No Content"
 });
 
+// Ruta específica para obtener ausencias por NIF
+app.get('/api/usuarios/:nif/ausencias', (req, res) => {
+  const tipoAusenciaController = require('./controller/tipoAusenciaController');
+  tipoAusenciaController.getDiasPorTipo(req, res);
+});
+
 // Rutas de la API Rest
 app.use("/api", usuarioRoutes);
 app.use("/api/tipoAusencia", tipoAusenciaRoutes);
