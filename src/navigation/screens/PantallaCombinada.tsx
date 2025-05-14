@@ -25,10 +25,14 @@ import cerrar_sesion from "../../assets/iconos/cerrar_sesion.png";
 import solicitud_fichajes from "../../assets/iconos/solicitud_fichajes.png";
 import peticion_epi from "../../assets/iconos/peticion_epi.png";
 import consultor_plr from "../../assets/iconos/consultor_plr.png";
+import incidencias from "../../assets/iconos/incidencias.png";
+import ausencia from "../../assets/iconos/ausencia.png";
+import asistente_virtual from "../../assets/iconos/asistente_virtual.png";
 import { MaterialIcons } from "@expo/vector-icons";
 import Carousel from "react-native-reanimated-carousel";
 import { useWindowDimensions } from "react-native";
 import logoAcciona from "../../assets/favicon.png";
+import { Background } from "@react-navigation/elements";
 
 type RootStackParamList = {
   Home: undefined;
@@ -484,30 +488,94 @@ function PantallaCombinada() {
               <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
               <View style={styles.quickActions}>
                 <Button
-                  mode="contained"
-                  icon="alert-circle"
                   style={[
                     styles.quickActionButton,
-                    { width: windowWidth * 0.4 },
+                    { width: windowWidth / 3.5 },
                   ]}
-                  labelStyle={styles.quickActionButtonLabel}
-                  contentStyle={styles.quickActionButtonContent}
                   onPress={() => navigation.navigate("Incidencia")}
                 >
-                  Incidencia
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 14,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Image
+                      source={incidencias}
+                      style={{ width: 28, height: 28 }}
+                      resizeMode="contain"
+                    ></Image>
+                    <Text
+                      style={{
+                        fontWeight: 600,
+                        color: "black",
+                      }}
+                    >
+                      Incidencias
+                    </Text>
+                  </View>
                 </Button>
                 <Button
-                  mode="contained"
-                  icon="calendar"
                   style={[
                     styles.quickActionButton,
-                    { width: windowWidth * 0.4 },
+                    { width: windowWidth / 3.5 },
                   ]}
-                  labelStyle={styles.quickActionButtonLabel}
-                  contentStyle={styles.quickActionButtonContent}
                   onPress={() => navigation.navigate("Ausencia")}
                 >
-                  Ausencia
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 14,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Image
+                      source={ausencia}
+                      style={{ width: 30, height: 30 }}
+                      resizeMode="contain"
+                    ></Image>
+                    <Text style={{ fontWeight: 600, color: "black" }}>
+                      Ausencia
+                    </Text>
+                  </View>
+                </Button>
+                <Button
+                  style={[
+                    styles.quickActionButton,
+                    { width: windowWidth / 3.5 },
+                  ]}
+                  onPress={() => navigation.navigate("")}
+                >
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 16,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Image
+                      source={asistente_virtual}
+                      style={{
+                        width: 30,
+                        height: 30,
+                        marginTop: 18,
+                      }}
+                      resizeMode="contain"
+                    ></Image>
+                    <Text
+                      style={{
+                        fontWeight: 600,
+                        color: "black",
+                        textAlign: "center"
+                      }}
+                    >
+                      Asistente virtual
+                    </Text>
+                  </View>
                 </Button>
               </View>
             </View>
@@ -721,35 +789,35 @@ const styles = StyleSheet.create({
   },
   welcomeContainer: {
     margin: 10,
-    marginBottom: 20,  
+    marginBottom: 20,
     alignItems: "center",
     borderRadius: 10,
     backgroundColor: "white",
-    overflow: 'hidden', 
+    overflow: "hidden",
   },
   welcomeLogo: {
     backgroundColor: "#D50032",
     width: "100%",
     justifyContent: "center",
-    height: 120,  // Altura fija recomendada
+    height: 120, // Altura fija recomendada
     alignItems: "center",
   },
   welcomeDescription: {
     padding: 15,
-    paddingBottom: 15,  
-    borderTopWidth: 0,  
-    width: '100%',
+    paddingBottom: 15,
+    borderTopWidth: 0,
+    width: "100%",
   },
   welcomeText: {
-    fontSize: 24, 
+    fontSize: 24,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 8, 
+    marginBottom: 8,
   },
   welcomeSubtitle: {
     fontSize: 16,
     color: "#666",
-    lineHeight: 20,  
+    lineHeight: 20,
   },
   title: {
     fontSize: 18,
@@ -822,40 +890,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
-    color: "#333",
+    color: "black",
     alignContent: "center",
-    textAlign: "center",
+    textAlign: "left",
+    marginLeft: 20,
   },
   quickActions: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "center",
     width: "100%",
-    flexWrap: "wrap",
+    gap: 10,
   },
   quickActionButton: {
-    backgroundColor: "#D50032",
-    borderRadius: 12,
-    marginHorizontal: 5,
-    marginVertical: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  quickActionButtonContent: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    flexDirection: "row",
+    backgroundColor: "white",
+    borderRadius: 10,
+    height: 130,
+    display: "flex",
     alignItems: "center",
+    flexDirection: "row",
     justifyContent: "center",
-  },
-  quickActionButtonLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFF",
-    flexShrink: 1,
-    textAlign: "center",
   },
   errorSnackbar: {
     backgroundColor: "#FF4444",
