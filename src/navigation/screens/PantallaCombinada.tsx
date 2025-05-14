@@ -10,7 +10,7 @@ import {
   View,
   Alert,
 } from "react-native";
-import { Appbar, Button, Snackbar } from "react-native-paper";
+import { Appbar, Button, Divider, Snackbar } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet } from "react-native";
 import { Box, Text } from "@gluestack-ui/themed";
@@ -28,6 +28,7 @@ import consultor_plr from "../../assets/iconos/consultor_plr.png";
 import incidencias from "../../assets/iconos/incidencias.png";
 import ausencia from "../../assets/iconos/ausencia.png";
 import asistente_virtual from "../../assets/iconos/asistente_virtual.png";
+import flecha_preguntasFrecuentes from "../../assets/iconos/flecha_preguntasFrecuentes.png";
 import { MaterialIcons } from "@expo/vector-icons";
 import Carousel from "react-native-reanimated-carousel";
 import { useWindowDimensions } from "react-native";
@@ -490,7 +491,7 @@ function PantallaCombinada() {
                 <Button
                   style={[
                     styles.quickActionButton,
-                    { width: windowWidth / 3.5 },
+                    { width: windowWidth / 3.35 },
                   ]}
                   onPress={() => navigation.navigate("Incidencia")}
                 >
@@ -520,7 +521,7 @@ function PantallaCombinada() {
                 <Button
                   style={[
                     styles.quickActionButton,
-                    { width: windowWidth / 3.5 },
+                    { width: windowWidth / 3.35 },
                   ]}
                   onPress={() => navigation.navigate("Ausencia")}
                 >
@@ -545,7 +546,7 @@ function PantallaCombinada() {
                 <Button
                   style={[
                     styles.quickActionButton,
-                    { width: windowWidth / 3.5 },
+                    { width: windowWidth / 3.35 },
                   ]}
                   onPress={() => navigation.navigate("")}
                 >
@@ -570,13 +571,84 @@ function PantallaCombinada() {
                       style={{
                         fontWeight: 600,
                         color: "black",
-                        textAlign: "center"
+                        textAlign: "center",
                       }}
                     >
                       Asistente virtual
                     </Text>
                   </View>
                 </Button>
+              </View>
+            </View>
+            <View style={{ marginBottom: 10 }}>
+              <Text
+                style={{
+                  fontWeight: 600,
+                  color: "black",
+                  marginLeft: 10,
+                  fontSize: 18,
+                }}
+              >
+                Preguntas frecuentes
+              </Text>
+              <View
+                style={{
+                  backgroundColor: "white",
+                  margin: 10,
+                  padding: 10,
+                  borderRadius: 10,
+                }}
+              >
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                  }}
+                >
+                  <Text>¿Cómo se reporta un incidente?</Text>
+                  <Image
+                    source={flecha_preguntasFrecuentes}
+                    style={{ width: 15, height: 15 }}
+                  ></Image>
+                </View>
+                <Divider style={{ marginTop: 5, marginBottom: 5 }}></Divider>
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                  }}
+                >
+                  <Text>¿Cómo actualizo mi perfil?</Text>
+                  <Image
+                    source={flecha_preguntasFrecuentes}
+                    style={{ width: 15, height: 15 }}
+                  ></Image>
+                </View>
+                <Divider style={{ marginTop: 5, marginBottom: 5 }}></Divider>
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                  }}
+                >
+                  <Text>¿Cómo activo la huella biométrica?</Text>
+                  <Image
+                    source={flecha_preguntasFrecuentes}
+                    style={{ width: 15, height: 15 }}
+                  ></Image>
+                </View>
               </View>
             </View>
             <View style={styles.infoContainer}>
@@ -893,7 +965,7 @@ const styles = StyleSheet.create({
     color: "black",
     alignContent: "center",
     textAlign: "left",
-    marginLeft: 20,
+    marginLeft: 10,
   },
   quickActions: {
     flexDirection: "row",
