@@ -420,7 +420,7 @@ function PantallaCombinada() {
                         style={{ width: 25, height: 25 }}
                       />
                       <Text style={styles.menuButtonText}>
-                        Solicitud fichajes
+                        Solicitud mis fichajes
                       </Text>
                     </TouchableOpacity>
                     <View style={styles.menuSpacer} />
@@ -445,7 +445,7 @@ function PantallaCombinada() {
                         source={consultor_plr}
                         style={{ width: 25, height: 25 }}
                       />
-                      <Text style={styles.menuButtonText}>Consultor PLR</Text>
+                      <Text style={styles.menuButtonText}>Documentación PLR</Text>
                     </TouchableOpacity>
                     <View style={styles.menuSpacer} />
                   </View>
