@@ -25,6 +25,7 @@ import cerrar_sesion from "../../assets/iconos/cerrar_sesion.png";
 import solicitud_fichajes from "../../assets/iconos/solicitud_fichajes.png";
 import peticion_epi from "../../assets/iconos/peticion_epi.png";
 import consultor_plr from "../../assets/iconos/consultor_plr.png";
+import { MaterialIcons } from "@expo/vector-icons";
 
 type RootStackParamList = {
   Home: undefined;
@@ -332,10 +333,11 @@ function PantallaCombinada() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.button}
+                style={styles.buttonBiometric}
                 onPress={loginWithBiometrics}
               >
-                <Text style={styles.buttonText}>Iniciar con Huella</Text>
+                <MaterialIcons name="fingerprint" size={25} color="#D50032" />
+                <Text style={{color: "#D50032"}}>Acceder con huella</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -633,6 +635,26 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
     marginTop: 10,
+  },
+  buttonBiometric: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 40,
+    width: "100%",
+    borderColor: "#D50032",
+    borderWidth: 1,
+    shadowColor: "gray",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    marginTop: 15,
+    gap: 8,
   },
   buttonText: {
     color: "white",
