@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -7,6 +9,8 @@ const cookieParser = require("cookie-parser");
 const usuarioRoutes = require("./routes/usuarioRoutes");
 const tipoAusenciaRoutes = require("./routes/tipoAusenciaRoutes");
 const administradorRoutes = require("./routes/administradorRoutes"); // Añadido
+const solicitudesRoutes = require('./routes/solicitudesRoutes');
+
 
 // Config
 const config = require("./config/config");
@@ -41,6 +45,8 @@ app.get('/api/usuarios/:nif/ausencias', (req, res) => {
 app.use("/api", usuarioRoutes);
 app.use("/api/tipoAusencia", tipoAusenciaRoutes);
 app.use("/api", administradorRoutes); // Añadido
+app.use('/api/solicitudes', solicitudesRoutes);
+
 
 // (Opcional) servir estáticos
 // app.use(express.static(path.join(__dirname, "public")));

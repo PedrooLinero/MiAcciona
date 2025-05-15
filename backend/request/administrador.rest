@@ -13,3 +13,6 @@ Content-Type: application/json
 {
   "nif": "11122233A"
 }
+
+### get admin by id
+GET http://localhost:3001/api/admin/1

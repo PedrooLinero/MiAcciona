@@ -21,3 +21,16 @@ Content-Type: application/json
 ### Obtener un usuario por su nif
 
 GET http://localhost:3001/api/usuarios/12345678Z
+
+### enviar solicitud
+POST http://localhost:3001/api/solicitudes
+Content-Type: application/json
+
+{
+  "nif": "12345678Z",
+  "id_tipo": 1,
+  "titulo": "Vacaciones de verano",
+  "descripcion": "Solicito vacaciones para descansar en verano",
+  "fechaInicio": "2025-07-01",
+  "fechaFin": "2025-07-15"
+}

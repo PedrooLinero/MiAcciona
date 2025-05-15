@@ -1,9 +1,10 @@
+
 -- phpMyAdmin SQL Dump
 -- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: db
--- Tiempo de generación: 13-05-2025 a las 12:30:00
+-- Tiempo de generación: 15-05-2025 a las 09:42:00
 -- Versión del servidor: 8.0.41
 -- Versión de PHP: 8.2.27
 
@@ -135,21 +136,47 @@ CREATE TABLE `usuario_ausencia` (
 --
 
 INSERT INTO `usuario_ausencia` (`id_usuario`, `id_tipo`, `dias_permitidos`) VALUES
-(1, 1, 30),  -- Juan: Vacaciones
-(1, 2, 3),   -- Juan: Permisos retribuidos
-(1, 3, 10),  -- Juan: Asuntos propios
-(2, 1, 25),  -- María: Vacaciones
-(2, 2, 13),  -- María: Permisos retribuidos
-(2, 3, 5),   -- María: Asuntos propios
-(3, 1, 20),  -- Carlos: Vacaciones
-(3, 2, 5),   -- Carlos: Permisos retribuidos
-(3, 3, 5),   -- Carlos: Asuntos propios
-(4, 1, 20),  -- Ana: Vacaciones
-(4, 2, 5),   -- Ana: Permisos retribuidos
-(4, 3, 5),   -- Ana: Asuntos propios
-(5, 1, 20),  -- Luis: Vacaciones
-(5, 2, 5),   -- Luis: Permisos retribuidos
-(5, 3, 5);   -- Luis: Asuntos propios
+(1, 1, 30),
+(1, 2, 3),
+(1, 3, 10),
+(2, 1, 25),
+(2, 2, 13),
+(2, 3, 5),
+(3, 1, 20),
+(3, 2, 5),
+(3, 3, 5),
+(4, 1, 20),
+(4, 2, 5),
+(4, 3, 5),
+(5, 1, 20),
+(5, 2, 5),
+(5, 3, 5);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `solicitudes`
+--
+
+CREATE TABLE `solicitudes` (
+  `id_solicitud` INT NOT NULL AUTO_INCREMENT,
+  `usuario_id` INT NOT NULL,
+  `administrador_id` INT NOT NULL,
+  `tipo_ausencia_id` TINYINT NOT NULL,
+  `titulo` VARCHAR(100) NOT NULL,
+  `descripcion` TEXT,
+  `fecha_inicio` DATE NOT NULL,
+  `fecha_fin` DATE NOT NULL,
+  `estado` ENUM('pendiente','aceptada','rechazada') NOT NULL DEFAULT 'pendiente',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_solicitud`),
+  INDEX `idx_usuario_id` (`usuario_id`),
+  INDEX `idx_administrador_id` (`administrador_id`),
+  INDEX `idx_tipo_ausencia_id` (`tipo_ausencia_id`),
+  FOREIGN KEY `fk_solicitudes_usuario` (`usuario_id`) REFERENCES `usuarios` (`Idusuario`) ON DELETE CASCADE,
+  FOREIGN KEY `fk_solicitudes_administrador` (`administrador_id`) REFERENCES `administrador` (`Idadministrador`) ON DELETE CASCADE,
+  FOREIGN KEY `fk_solicitudes_tipo_ausencia` (`tipo_ausencia_id`) REFERENCES `tipo_ausencia` (`id_tipo`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -172,6 +199,12 @@ ALTER TABLE `tipo_ausencia`
 --
 ALTER TABLE `usuarios`
   MODIFY `Idusuario` INT NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT de la tabla `solicitudes`
+--
+ALTER TABLE `solicitudes`
+  MODIFY `id_solicitud` INT NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 COMMIT;
 

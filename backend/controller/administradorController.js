@@ -97,7 +97,13 @@ function administradorController() {
   this.getAllAdmins = async (req, res) => {
     try {
       const admins = await Administrador.findAll({
-        attributes: ["Idadministrador", "nombre", "primer_apellido", "rol", "email"],
+        attributes: [
+          "Idadministrador",
+          "nombre",
+          "primer_apellido",
+          "rol",
+          "email",
+        ],
       });
       return res.status(200).json(Respuesta.exito(admins));
     } catch (err) {
@@ -138,11 +144,19 @@ function administradorController() {
           "activo_biometria",
           "subdivision_personal",
         ],
-        include: [{
-          model: models.usuarios,
-          as: 'usuarios',
-          attributes: ['Idusuario', 'nombre', 'primer_apellido', 'nif', 'rol'],
-        }],
+        include: [
+          {
+            model: models.usuarios,
+            as: "usuarios",
+            attributes: [
+              "Idusuario",
+              "nombre",
+              "primer_apellido",
+              "nif",
+              "rol",
+            ],
+          },
+        ],
       });
       if (!admin) {
         return res
@@ -157,7 +171,10 @@ function administradorController() {
 
       return res.status(200).json(Respuesta.exito(adminData));
     } catch (err) {
-      logMensaje("Error al obtener administrador por NIF: " + err.message, "error");
+      logMensaje(
+        "Error al obtener administrador por NIF: " + err.message,
+        "error"
+      );
       return res
         .status(500)
         .json(Respuesta.error(null, "Error interno del servidor"));
@@ -189,7 +206,10 @@ function administradorController() {
 
       res.status(204).send();
     } catch (error) {
-      logMensaje("Error al actualizar administrador: " + error.message, "error");
+      logMensaje(
+        "Error al actualizar administrador: " + error.message,
+        "error"
+      );
       res
         .status(500)
         .json(
@@ -198,6 +218,58 @@ function administradorController() {
             `Error al actualizar los datos: ${req.originalUrl}`
           )
         );
+    }
+  };
+
+  /**
+   * GET /api/administradores/:Idadministrador
+   * Devuelve el correo y nombre del administrador por su Idadministrador
+   */
+  this.getAdminById = async (req, res) => {
+    const { Idadministrador } = req.params;
+
+    try {
+      if (!Idadministrador) {
+        return res
+          .status(400)
+          .json(Respuesta.error(null, "El Idadministrador es obligatorio"));
+      }
+
+      logMensaje(
+        `Buscando administrador con Idadministrador: ${Idadministrador}`,
+        "info"
+      );
+
+      const admin = await Administrador.findOne({
+        where: { Idadministrador: Idadministrador },
+        attributes: ["Idadministrador", "nombre", "email"],
+      });
+
+      if (!admin) {
+        return res
+          .status(404)
+          .json(
+            Respuesta.error(
+              null,
+              `Administrador con Idadministrador ${Idadministrador} no encontrado`
+            )
+          );
+      }
+
+      const adminData = {
+        nombre: admin.nombre,
+        email: admin.email,
+      };
+
+      return res.status(200).json(Respuesta.exito(adminData));
+    } catch (err) {
+      logMensaje(
+        `Error al obtener administrador por Idadministrador ${Idadministrador}: ${err.message}`,
+        "error"
+      );
+      return res
+        .status(500)
+        .json(Respuesta.error(null, "Error interno del servidor"));
     }
   };
 }

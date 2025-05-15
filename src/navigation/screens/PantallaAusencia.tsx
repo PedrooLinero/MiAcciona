@@ -71,6 +71,8 @@ export default function PantallaAusencia() {
   const [openFin, setOpenFin] = useState(false);
 
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Cargar los tipos de ausencia
@@ -114,29 +116,6 @@ export default function PantallaAusencia() {
     })();
   }, []);
 
-  const handleSubmit = () => {
-    if (
-      !tipoSeleccionado ||
-      !titulo ||
-      !descripcion ||
-      !fechaInicio ||
-      !fechaFin
-    ) {
-      alert("Por favor, completa todos los campos");
-      return;
-    }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setShowSuccess(true);
-      setTipoSeleccionado(null);
-      setTitulo("");
-      setDescripcion("");
-      setFechaInicio(null);
-      setFechaFin(null);
-    }, 1500);
-  };
-
   const formatDateToLocal = (date: Date | null): string => {
     if (!date) return "";
     const day = String(date.getDate()).padStart(2, "0");
@@ -146,6 +125,68 @@ export default function PantallaAusencia() {
   };
 
   const today = new Date();
+
+  // Calcular días entre fechaInicio y fechaFin
+  const calcularDiasSolicitados = (inicio: Date, fin: Date): number => {
+    const diferenciaMs = fin.getTime() - inicio.getTime();
+    const dias = Math.ceil(diferenciaMs / (1000 * 60 * 60 * 24)) + 1; // Incluye el día inicial
+    return dias;
+  };
+
+  const handleSubmit = async () => {
+  if (!tipoSeleccionado || !titulo || !descripcion || !fechaInicio || !fechaFin) {
+    setErrorMessage("Por favor, completa todos los campos");
+    setShowError(true);
+    return;
+  }
+
+  const diasSolicitados = calcularDiasSolicitados(fechaInicio, fechaFin);
+  const diasDisponibles = user?.dias_por_tipo[tipoSeleccionado.nombre] ?? 0;
+
+  if (diasSolicitados > diasDisponibles) {
+    setErrorMessage(
+      `No puedes solicitar más días de los disponibles. Disponibles: ${diasDisponibles}, solicitados: ${diasSolicitados}.`
+    );
+    setShowError(true);
+    return;
+  }
+
+  setIsSubmitting(true);
+  try {
+    const nif = await AsyncStorage.getItem("nif");
+    const res = await fetch("http://localhost:3001/api/solicitudes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nif,
+        id_tipo: tipoSeleccionado.id_tipo,
+        titulo,
+        descripcion,
+        fechaInicio: fechaInicio.toISOString().split('T')[0],
+        fechaFin: fechaFin.toISOString().split('T')[0],
+      }),
+    });
+    const json = await res.json();
+
+    if (json.ok) {
+      setShowSuccess(true);
+      // Limpiar form
+      setTipoSeleccionado(null);
+      setTitulo("");
+      setDescripcion("");
+      setFechaInicio(null);
+      setFechaFin(null);
+    } else {
+      throw new Error(json.mensaje || "Error al enviar la solicitud");
+    }
+  } catch (err) {
+    setErrorMessage(err instanceof Error ? err.message : "Error desconocido");
+    setShowError(true);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   if (loadingTipos || !user) {
     return (
@@ -172,7 +213,7 @@ export default function PantallaAusencia() {
           <Text style={styles.diasPermitidos}>
             Días restantes:{" "}
             {tipoSeleccionado
-              ? (user.dias_por_tipo[tipoSeleccionado.nombre] ?? "N/A")
+              ? user.dias_por_tipo[tipoSeleccionado.nombre] ?? "N/A"
               : "N/A"}
           </Text>
         </Appbar.Header>
@@ -336,6 +377,14 @@ export default function PantallaAusencia() {
           style={styles.snackbar}
         >
           ¡Solicitud enviada con éxito!
+        </Snackbar>
+
+        <Snackbar
+          visible={showError}
+          onDismiss={() => setShowError(false)}
+          style={styles.snackbar}
+        >
+          {errorMessage}
         </Snackbar>
       </SafeAreaView>
     </PaperProvider>

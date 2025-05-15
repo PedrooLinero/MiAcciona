@@ -1,0 +1,20 @@
+
+### solicitud de prueba
+POST http://localhost:3001/api/solicitudes/test
+Content-Type: application/json
+
+{ "foo": "bar" }
+
+### 
+POST http://localhost:3001/api/solicitudes
+Content-Type: application/json
+
+{
+  "nif": "12345678F",
+  "id_tipo": 3,
+  "titulo": "Vacaciones verano",
+  "descripcion": "Necesito 5 días para vacaciones",
+  "fechaInicio": "2025-07-01",
+  "fechaFin": "2025-07-05"
+}
+

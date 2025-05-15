@@ -108,79 +108,83 @@ function UsuarioController() {
     }
   };
 
-/**
- * GET /api/usuarios/:nif
- * Recupera un usuario por su NIF
- */
-this.getUserByNif = async (req, res) => {
-  const { nif } = req.params;
-  try {
-    if (!nif) {
-      return res
-        .status(400)
-        .json(Respuesta.error(null, "El NIF es obligatorio"));
-    }
-
-    const user = await Usuario.findOne({
-      where: { nif },
-      attributes: [
-        "Idusuario",
-        "nombre",
-        "primer_apellido",
-        "segundo_apellido",
-        "nif",
-        "fechanacimiento",
-        "estado",
-        "actividad",
-        "rol",
-        "telefono",
-        "email",
-        "token_huella",
-        "activo_biometria",
-        "subdivision_personal",
-      ],
-      include: [{
-        association: 'ausencias', // Usar el alias de la asociación definida en el modelo
-        attributes: ['dias_permitidos'],
-        include: [{
-          association: 'tipo_ausencia', // Alias de la asociación en usuario_ausencia
-          attributes: ['nombre'],
-        }],
-      }],
-    });
-
-    if (!user) {
-      return res
-        .status(404)
-        .json(Respuesta.error(null, "Usuario no encontrado"));
-    }
-
-    // Transformar las ausencias a un objeto clave-valor
-    const ausenciasTransformadas = user.ausencias.reduce((acc, ausencia) => {
-      if (ausencia.tipo_ausencia) {
-        acc[ausencia.tipo_ausencia.nombre] = ausencia.dias_permitidos;
+  /**
+   * GET /api/usuarios/:nif
+   * Recupera un usuario por su NIF
+   */
+  this.getUserByNif = async (req, res) => {
+    const { nif } = req.params;
+    try {
+      if (!nif) {
+        return res
+          .status(400)
+          .json(Respuesta.error(null, "El NIF es obligatorio"));
       }
-      return acc;
-    }, {});
 
-    // Construir el objeto de respuesta final
-    const userData = {
-      ...user.get({ plain: true }),
-      ausencias: ausenciasTransformadas
-    };
+      const user = await Usuario.findOne({
+        where: { nif },
+        attributes: [
+          "Idusuario",
+          "nombre",
+          "primer_apellido",
+          "segundo_apellido",
+          "nif",
+          "fechanacimiento",
+          "estado",
+          "actividad",
+          "rol",
+          "telefono",
+          "email",
+          "token_huella",
+          "activo_biometria",
+          "subdivision_personal",
+          "id_administrador",
+        ],
+        include: [
+          {
+            association: "ausencias", // Usar el alias de la asociación definida en el modelo
+            attributes: ["dias_permitidos"],
+            include: [
+              {
+                association: "tipo_ausencia", // Alias de la asociación en usuario_ausencia
+                attributes: ["nombre"],
+              },
+            ],
+          },
+        ],
+      });
 
-    // Eliminar la propiedad original de ausencias que ya no necesitamos
-    delete userData.ausencias;
+      if (!user) {
+        return res
+          .status(404)
+          .json(Respuesta.error(null, "Usuario no encontrado"));
+      }
 
-    return res.status(200).json(Respuesta.exito(userData));
-    
-  } catch (err) {
-    logMensaje("Error al obtener usuario por NIF: " + err.message, "error");
-    return res
-      .status(500)
-      .json(Respuesta.error(null, "Error interno del servidor"));
-  }
-};
+      // Transformar las ausencias a un objeto clave-valor
+      const ausenciasTransformadas = user.ausencias.reduce((acc, ausencia) => {
+        if (ausencia.tipo_ausencia) {
+          acc[ausencia.tipo_ausencia.nombre] = ausencia.dias_permitidos;
+        }
+        return acc;
+      }, {});
+
+      // Construir el objeto de respuesta final
+      const userData = {
+        ...user.get({ plain: true }),
+        ausencias: ausenciasTransformadas,
+      };
+
+      // Eliminar la propiedad original de ausencias que ya no necesitamos
+      delete userData.ausencias;
+
+      return res.status(200).json(Respuesta.exito(userData));
+    } catch (err) {
+      logMensaje("Error al obtener usuario por NIF: " + err.message, "error");
+      return res
+        .status(500)
+        .json(Respuesta.error(null, "Error interno del servidor"));
+    }
+  };
 
   this.updateBiometricUser = async (req, res) => {
     const datos = req.body;
@@ -205,6 +209,120 @@ this.getUserByNif = async (req, res) => {
             null,
             `Error al actualizar los datos: ${req.originalUrl}`
           )
+        );
+    }
+  };
+
+  this.crearSolicitud = async (req, res) => {
+    const { nif, id_tipo, titulo, descripcion, fechaInicio, fechaFin } =
+      req.body;
+
+    try {
+      // Validar campos obligatorios
+      if (
+        !nif ||
+        !id_tipo ||
+        !titulo ||
+        !descripcion ||
+        !fechaInicio ||
+        !fechaFin
+      ) {
+        return res
+          .status(400)
+          .json(Respuesta.error(null, "Faltan campos obligatorios"));
+      }
+
+      // Buscar al usuario por NIF
+      const usuario = await models.usuarios.findOne({ where: { nif } });
+      if (!usuario) {
+        return res
+          .status(404)
+          .json(Respuesta.error(null, "Usuario no encontrado"));
+      }
+
+      // Verificar que el usuario tenga un administrador asignado
+      if (!usuario.id_administrador) {
+        return res
+          .status(400)
+          .json(
+            Respuesta.error(
+              null,
+              "El usuario no tiene un administrador asignado"
+            )
+          );
+      }
+
+      // Verificar que el tipo de ausencia exista
+      const tipoAusencia = await models.tipoAusencia.findByPk(id_tipo);
+      if (!tipoAusencia) {
+        return res
+          .status(400)
+          .json(Respuesta.error(null, "Tipo de ausencia no válido"));
+      }
+
+      // Validar que fecha_inicio sea anterior a fecha_fin
+      if (new Date(fechaInicio) > new Date(fechaFin)) {
+        return res
+          .status(400)
+          .json(
+            Respuesta.error(
+              null,
+              "La fecha de inicio debe ser anterior a la fecha de fin"
+            )
+          );
+      }
+
+      // Calcular días solicitados y verificar disponibilidad
+      const diasSolicitados =
+        Math.ceil(
+          (new Date(fechaFin) - new Date(fechaInicio)) / (1000 * 60 * 60 * 24)
+        ) + 1;
+      const ausencia = await models.usuarioAusencia.findOne({
+        where: { id_usuario: usuario.Idusuario, id_tipo },
+      });
+      if (!ausencia || diasSolicitados > ausencia.dias_permitidos) {
+        return res
+          .status(400)
+          .json(
+            Respuesta.error(
+              null,
+              `No hay suficientes días disponibles. Disponibles: ${ausencia?.dias_permitidos || 0}`
+            )
+          );
+      }
+
+      // Crear la solicitud
+      console.log("Datos para crear solicitud:", {
+        usuario_id: usuario.Idusuario,
+        administrador_id: usuario.id_administrador,
+        tipo_ausencia_id: id_tipo,
+        titulo,
+        descripcion,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
+        estado: "pendiente",
+      });
+
+      const solicitud = await models.solicitudes.create({
+        usuario_id: usuario.Idusuario,
+        administrador_id: usuario.id_administrador,
+        tipo_ausencia_id: id_tipo,
+        titulo,
+        descripcion,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
+        estado: "pendiente",
+      });
+
+      return res
+        .status(201)
+        .json(Respuesta.exito(solicitud, "Solicitud enviada correctamente"));
+    } catch (error) {
+      logMensaje("Error al crear solicitud: " + error.message, "error");
+      return res
+        .status(500)
+        .json(
+          Respuesta.error(null, "Error interno del servidor: " + error.message)
         );
     }
   };
