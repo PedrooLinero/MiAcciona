@@ -44,6 +44,7 @@ type RootStackParamList = {
   Ausencia: undefined;
   PantallaPerfil: undefined;
   AsistenteVirtual: undefined;
+  PantallaSolicitd: undefined;
 };
 type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 
@@ -381,6 +382,11 @@ function PantallaCombinada() {
                   </Text>
                 </View>
               )}
+              <Appbar.Action
+                icon="bell" // Icono de campana
+                color="white"
+                onPress={() => navigation.navigate("PantallaSolicitud")}
+              />
               <Appbar.Action
                 icon="account"
                 color="white"
