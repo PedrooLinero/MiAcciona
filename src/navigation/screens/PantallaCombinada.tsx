@@ -36,12 +36,14 @@ import Carousel from "react-native-reanimated-carousel";
 import { useWindowDimensions } from "react-native";
 import logoAcciona from "../../assets/favicon.png";
 import { Background } from "@react-navigation/elements";
+import { CheckCircleIcon } from "@gluestack-ui/themed";
 
 type RootStackParamList = {
   Home: undefined;
   Incidencia: undefined;
   Ausencia: undefined;
   PantallaPerfil: undefined;
+  AsistenteVirtual: undefined;
 };
 type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 
@@ -296,7 +298,7 @@ function PantallaCombinada() {
   };
 
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: "#f7f9fa" }}>
       <Box style={{ flex: 1 }}>
         {/* Modal de Login */}
         <Modal
@@ -385,6 +387,28 @@ function PantallaCombinada() {
                 onPress={() => navigation.navigate("PantallaPerfil")}
               />
             </Appbar.Header>
+
+            <Snackbar
+              visible={showWelcome}
+              onDismiss={() => setShowWelcome(false)}
+              duration={3000}
+              style={styles.headerSnackbar}
+              wrapperStyle={{ top: 0 }} // Asegura la posición
+            >
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <Text>
+                  <CheckCircleIcon></CheckCircleIcon>
+                </Text>
+                <Text>{welcomeMessage}</Text>
+              </View>
+            </Snackbar>
 
             <Modal visible={menuVisible} transparent animationType="fade">
               <View style={styles.menuOverlay}>
@@ -552,19 +576,7 @@ function PantallaCombinada() {
                     styles.quickActionButton,
                     { width: windowWidth / 3.35 },
                   ]}
-                  onPress={() => {
-                    const phoneNumber = "932075053";
-                    const url = `whatsapp://send?phone=${phoneNumber}`;
-
-                    Linking.canOpenURL(url).then((supported) => {
-                      if (supported) {
-                        Linking.openURL(url);
-                      } else {
-                        const webUrl = `https://wa.me/${phoneNumber}`;
-                        Linking.openURL(webUrl);
-                      }
-                    });
-                  }}
+                  onPress={() => navigation.navigate("AsistenteVirtual")}
                 >
                   <View
                     style={{
@@ -675,12 +687,21 @@ function PantallaCombinada() {
                   en Acciona. Reporta incidencias, consulta reportes, planifica
                   tus vacaciones... desde un solo lugar.
                 </Text>
-                <View style={{display: "flex", alignItems: "center", flexDirection: "row", gap: 10, paddingLeft: 10, paddingBottom: 10}}>
+                <View
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: "row",
+                    gap: 10,
+                    paddingLeft: 10,
+                    paddingBottom: 10,
+                  }}
+                >
                   <Text
                     style={{
                       fontSize: 16,
                       color: "#D50032",
-                      fontWeight: 600
+                      fontWeight: 600,
                     }}
                   >
                     Saber más
@@ -694,15 +715,6 @@ function PantallaCombinada() {
             </View>
           </>
         )}
-
-        <Snackbar
-          visible={showWelcome}
-          onDismiss={() => setShowWelcome(false)}
-          duration={3000}
-          style={styles.snackbar}
-        >
-          {welcomeMessage}
-        </Snackbar>
       </Box>
     </ScrollView>
   );
@@ -927,21 +939,16 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     marginRight: 5,
   },
-  snackbar: {
-    backgroundColor: "#D50032",
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    borderRadius: 20,
-    padding: 10,
-    marginBottom: 20,
-    marginHorizontal: 20,
+  headerSnackbar: {
+    backgroundColor: "#f7f9fa",
     position: "absolute",
-    bottom: 20,
+    top: 100,
     left: 0,
     right: 0,
-    alignSelf: "center",
-    zIndex: 1000,
+    zIndex: 100,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "gray",
   },
   infoContainer: {
     backgroundColor: "white",
