@@ -9,8 +9,9 @@ import {
   TextInput,
   View,
   Alert,
+  Linking,
 } from "react-native";
-import { Appbar, Button, Snackbar } from "react-native-paper";
+import { Appbar, Button, Divider, Snackbar } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet } from "react-native";
 import { Box, Text } from "@gluestack-ui/themed";
@@ -25,13 +26,24 @@ import cerrar_sesion from "../../assets/iconos/cerrar_sesion.png";
 import solicitud_fichajes from "../../assets/iconos/solicitud_fichajes.png";
 import peticion_epi from "../../assets/iconos/peticion_epi.png";
 import consultor_plr from "../../assets/iconos/consultor_plr.png";
+import incidencias from "../../assets/iconos/incidencias.png";
+import ausencia from "../../assets/iconos/ausencia.png";
+import asistente_virtual from "../../assets/iconos/asistente_virtual.png";
+import flecha_preguntasFrecuentes from "../../assets/iconos/flecha_preguntasFrecuentes.png";
+import saber_mas from "../../assets/iconos/saber_mas.png";
 import { MaterialIcons } from "@expo/vector-icons";
+import Carousel from "react-native-reanimated-carousel";
+import { useWindowDimensions } from "react-native";
+import logoAcciona from "../../assets/favicon.png";
+import { Background } from "@react-navigation/elements";
+import { CheckCircleIcon } from "@gluestack-ui/themed";
 
 type RootStackParamList = {
   Home: undefined;
   Incidencia: undefined;
   Ausencia: undefined;
   PantallaPerfil: undefined;
+  AsistenteVirtual: undefined;
 };
 type HomeScreenProp = StackNavigationProp<RootStackParamList, "Home">;
 
@@ -42,7 +54,7 @@ function PantallaCombinada() {
     new Animated.Value(-Dimensions.get("window").width / 2)
   ).current;
 
-  const windowWidth = Dimensions.get("window").width;
+  const { width: windowWidth } = useWindowDimensions();
 
   const [userData, setUserData] = useState<UserData | null>(null);
   const [nif, setNif] = useState("");
@@ -62,6 +74,14 @@ function PantallaCombinada() {
   const [biometricData, setBiometricData] = useState({});
 
   const navigation = useNavigation<HomeScreenProp>();
+
+  const width = Dimensions.get("window").width;
+
+  const images = [
+    require("../../assets/imagenes/carrusel_1.webp"),
+    require("../../assets/imagenes/carrusel_2.jpg"),
+    require("../../assets/imagenes/carrusel_3.jpg"),
+  ];
 
   interface UserData {
     id: number;
@@ -278,7 +298,7 @@ function PantallaCombinada() {
   };
 
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: "#f7f9fa" }}>
       <Box style={{ flex: 1 }}>
         {/* Modal de Login */}
         <Modal
@@ -337,7 +357,7 @@ function PantallaCombinada() {
                 onPress={loginWithBiometrics}
               >
                 <MaterialIcons name="fingerprint" size={25} color="#D50032" />
-                <Text style={{color: "#D50032"}}>Acceder con huella</Text>
+                <Text style={{ color: "#D50032" }}>Acceder con huella</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -368,7 +388,29 @@ function PantallaCombinada() {
               />
             </Appbar.Header>
 
-            <Modal visible={menuVisible} transparent animationType="none">
+            <Snackbar
+              visible={showWelcome}
+              onDismiss={() => setShowWelcome(false)}
+              duration={3000}
+              style={styles.headerSnackbar}
+              wrapperStyle={{ top: 0 }} // Asegura la posición
+            >
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <Text>
+                  <CheckCircleIcon></CheckCircleIcon>
+                </Text>
+                <Text>{welcomeMessage}</Text>
+              </View>
+            </Snackbar>
+
+            <Modal visible={menuVisible} transparent animationType="fade">
               <View style={styles.menuOverlay}>
                 <Animated.View
                   style={[
@@ -404,7 +446,7 @@ function PantallaCombinada() {
                         style={{ width: 25, height: 25 }}
                       />
                       <Text style={styles.menuButtonText}>
-                        Solicitud fichajes
+                        Solicitud mis fichajes
                       </Text>
                     </TouchableOpacity>
                     <View style={styles.menuSpacer} />
@@ -429,7 +471,9 @@ function PantallaCombinada() {
                         source={consultor_plr}
                         style={{ width: 25, height: 25 }}
                       />
-                      <Text style={styles.menuButtonText}>Consultor PLR</Text>
+                      <Text style={styles.menuButtonText}>
+                        Documentación PLR
+                      </Text>
                     </TouchableOpacity>
                     <View style={styles.menuSpacer} />
                   </View>
@@ -438,77 +482,239 @@ function PantallaCombinada() {
               </View>
             </Modal>
 
-            <View style={styles.logoContainer}>
-              <Image
-                source={require("./../../assets/Logo_aplicacion.png")}
-                style={styles.logo}
-              />
-            </View>
+            {/* <Carousel
+                width={width}
+                height={220}
+                data={images}
+                autoPlay
+                scrollAnimationDuration={3000}
+                renderItem={({ item }) => (
+                  <Image
+                    source={item}
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                )}
+              /> */}
+
             <View style={styles.welcomeContainer}>
-              <Text style={styles.welcomeText}>¡Bienvenido a MiAcciona!</Text>
-              <Text style={styles.welcomeSubtitle}>
-                Gestiona tus incidencias, reportes y vacaciones de manera
-                eficiente.
-              </Text>
+              <View style={styles.welcomeLogo}>
+                <Image
+                  style={{ width: 250, height: 80 }}
+                  source={logoAcciona}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={styles.welcomeDescription}>
+                <Text style={styles.welcomeText}>¡Bienvenido a MiAcciona!</Text>
+                <Text style={styles.welcomeSubtitle}>
+                  Tu portal personal para gestionar todos tus recursos. Accede a
+                  la información de la empresa, comunica incidencias, gestiona
+                  ausencias y obtén asistencia siempre que lo necesites.
+                </Text>
+              </View>
             </View>
             <View style={styles.quickActionsContainer}>
               <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
               <View style={styles.quickActions}>
                 <Button
-                  mode="contained"
-                  icon="alert-circle"
                   style={[
                     styles.quickActionButton,
-                    { width: windowWidth * 0.4 },
+                    { width: windowWidth / 3.35 },
                   ]}
-                  labelStyle={styles.quickActionButtonLabel}
-                  contentStyle={styles.quickActionButtonContent}
                   onPress={() => navigation.navigate("Incidencia")}
                 >
-                  Incidencia
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 14,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Image
+                      source={incidencias}
+                      style={{ width: 28, height: 28 }}
+                      resizeMode="contain"
+                    ></Image>
+                    <Text
+                      style={{
+                        fontWeight: 600,
+                        color: "black",
+                      }}
+                    >
+                      Incidencias
+                    </Text>
+                  </View>
                 </Button>
                 <Button
-                  mode="contained"
-                  icon="calendar"
                   style={[
                     styles.quickActionButton,
-                    { width: windowWidth * 0.4 },
+                    { width: windowWidth / 3.35 },
                   ]}
-                  labelStyle={styles.quickActionButtonLabel}
-                  contentStyle={styles.quickActionButtonContent}
                   onPress={() => navigation.navigate("Ausencia")}
                 >
-                  Ausencia
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 14,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Image
+                      source={ausencia}
+                      style={{ width: 30, height: 30 }}
+                      resizeMode="contain"
+                    ></Image>
+                    <Text style={{ fontWeight: 600, color: "black" }}>
+                      Ausencia
+                    </Text>
+                  </View>
+                </Button>
+                <Button
+                  style={[
+                    styles.quickActionButton,
+                    { width: windowWidth / 3.35 },
+                  ]}
+                  onPress={() => navigation.navigate("AsistenteVirtual")}
+                >
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 16,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Image
+                      source={asistente_virtual}
+                      style={{
+                        width: 30,
+                        height: 30,
+                        marginTop: 18,
+                      }}
+                      resizeMode="contain"
+                    ></Image>
+                    <Text
+                      style={{
+                        fontWeight: 600,
+                        color: "black",
+                        textAlign: "center",
+                      }}
+                    >
+                      Asistente virtual
+                    </Text>
+                  </View>
                 </Button>
               </View>
             </View>
-            <View style={styles.infoContainer}>
-              <Text style={styles.sectionTitle}>Acerca de MiAcciona</Text>
-              <Text style={styles.infoText}>
-                MiAcciona es tu herramienta para simplificar la gestión diaria
-                en Acciona. Reporta incidencias, consulta reportes, planifica
-                tus vacaciones... desde un solo lugar.
-              </Text>
-              <Button
-                mode="contained"
-                style={styles.infoButton}
-                labelStyle={styles.infoButtonLabel}
-                contentStyle={styles.infoButtonContent}
+            <View style={{ marginBottom: 10 }}>
+              <Text
+                style={{
+                  fontWeight: 600,
+                  color: "black",
+                  marginLeft: 10,
+                  fontSize: 18,
+                }}
               >
-                Saber más
-              </Button>
+                Preguntas frecuentes
+              </Text>
+              <View
+                style={{
+                  backgroundColor: "white",
+                  margin: 10,
+                  padding: 10,
+                  borderRadius: 10,
+                }}
+              >
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                  }}
+                >
+                  <Text>¿Cómo se reporta un incidente?</Text>
+                  <Image
+                    source={flecha_preguntasFrecuentes}
+                    style={{ width: 15, height: 15 }}
+                  ></Image>
+                </View>
+                <Divider style={{ marginTop: 5, marginBottom: 5 }}></Divider>
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                  }}
+                >
+                  <Text>¿Cómo actualizo mi perfil?</Text>
+                  <Image
+                    source={flecha_preguntasFrecuentes}
+                    style={{ width: 15, height: 15 }}
+                  ></Image>
+                </View>
+                <Divider style={{ marginTop: 5, marginBottom: 5 }}></Divider>
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                  }}
+                >
+                  <Text>¿Cómo activo la huella biométrica?</Text>
+                  <Image
+                    source={flecha_preguntasFrecuentes}
+                    style={{ width: 15, height: 15 }}
+                  ></Image>
+                </View>
+              </View>
+            </View>
+            <View style={{ marginBottom: 30 }}>
+              <Text style={styles.sectionTitle}>Acerca de MiAcciona</Text>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoText}>
+                  MiAcciona es tu herramienta para simplificar la gestión diaria
+                  en Acciona. Reporta incidencias, consulta reportes, planifica
+                  tus vacaciones... desde un solo lugar.
+                </Text>
+                <View
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: "row",
+                    gap: 10,
+                    paddingLeft: 10,
+                    paddingBottom: 10,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: "#D50032",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Saber más
+                  </Text>
+                  <Image
+                    source={saber_mas}
+                    style={{ width: 18, height: 18 }}
+                  ></Image>
+                </View>
+              </View>
             </View>
           </>
         )}
-
-        <Snackbar
-          visible={showWelcome}
-          onDismiss={() => setShowWelcome(false)}
-          duration={3000}
-          style={styles.snackbar}
-        >
-          {welcomeMessage}
-        </Snackbar>
       </Box>
     </ScrollView>
   );
@@ -691,18 +897,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   welcomeContainer: {
-    marginBottom: 30,
+    margin: 10,
+    marginBottom: 20,
     alignItems: "center",
+    borderRadius: 10,
+    backgroundColor: "white",
+    overflow: "hidden",
+  },
+  welcomeLogo: {
+    backgroundColor: "#D50032",
+    width: "100%",
+    justifyContent: "center",
+    height: 120, // Altura fija recomendada
+    alignItems: "center",
+  },
+  welcomeDescription: {
+    padding: 15,
+    paddingBottom: 15,
+    borderTopWidth: 0,
+    width: "100%",
   },
   welcomeText: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#333",
+    marginBottom: 8,
   },
   welcomeSubtitle: {
     fontSize: 16,
     color: "#666",
-    marginTop: 10,
+    lineHeight: 20,
   },
   title: {
     fontSize: 18,
@@ -715,31 +939,20 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     marginRight: 5,
   },
-  snackbar: {
-    backgroundColor: "#D50032",
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    borderRadius: 20,
-    padding: 10,
-    marginBottom: 20,
-    marginHorizontal: 20,
+  headerSnackbar: {
+    backgroundColor: "#f7f9fa",
     position: "absolute",
-    bottom: 20,
+    top: 100,
     left: 0,
     right: 0,
-    alignSelf: "center",
-    zIndex: 1000,
+    zIndex: 100,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "gray",
   },
   infoContainer: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    width: "95%",
+    backgroundColor: "white",
+    borderRadius: 10,
     marginLeft: 10,
     marginRight: 10,
   },
@@ -747,6 +960,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
     marginBottom: 10,
+    padding: 10,
+    marginTop: 10,
   },
   infoButton: {
     backgroundColor: "#D50032",
@@ -768,47 +983,32 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   quickActionsContainer: {
-    marginBottom: 40,
+    marginBottom: 20,
     width: "100%",
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
-    color: "#333",
+    color: "black",
     alignContent: "center",
-    textAlign: "center",
+    textAlign: "left",
+    marginLeft: 10,
   },
   quickActions: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "center",
     width: "100%",
-    flexWrap: "wrap",
+    gap: 10,
   },
   quickActionButton: {
-    backgroundColor: "#D50032",
-    borderRadius: 12,
-    marginHorizontal: 5,
-    marginVertical: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  quickActionButtonContent: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    flexDirection: "row",
+    backgroundColor: "white",
+    borderRadius: 10,
+    height: 130,
+    display: "flex",
     alignItems: "center",
+    flexDirection: "row",
     justifyContent: "center",
-  },
-  quickActionButtonLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFF",
-    flexShrink: 1,
-    textAlign: "center",
   },
   errorSnackbar: {
     backgroundColor: "#FF4444",

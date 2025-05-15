@@ -13,6 +13,7 @@ import { Box, Text } from '@gluestack-ui/themed';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 
+
 type RootStackParamList = {
   Home: undefined;
   Incidencia: undefined;

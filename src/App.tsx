@@ -10,12 +10,14 @@ import PantallaCombinada from "./navigation/screens/PantallaCombinada";
 import PantallaIncidencia from "./navigation/screens/PantallaIncidencia";
 import PantallaAusencia from "./navigation/screens/PantallaAusencia";
 import PantallaPerfil from "./navigation/screens/PantallaPerfil";
+import PantallaAsistenteVirtual from "./navigation/screens/PantallaAsistenteVirtual";
 
 type RootStackParamList = {
   Home: undefined;
   Incidencia: undefined;
   Ausencia: undefined;
   PantallaPerfil: undefined;
+  AsistenteVirtual: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -31,6 +33,7 @@ export default function App() {
               <Stack.Screen name="Incidencia" component={PantallaIncidencia} />
               <Stack.Screen name="Ausencia" component={PantallaAusencia} />
               <Stack.Screen name="PantallaPerfil" component={PantallaPerfil} />
+              <Stack.Screen name="AsistenteVirtual" component={PantallaAsistenteVirtual} />
             </Stack.Navigator>
           </NavigationContainer>
         </PaperProvider>
