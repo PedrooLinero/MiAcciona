@@ -126,7 +126,7 @@ function PantallaAsistenteVirtual() {
                 <Span style={{ fontWeight: 600 }}>trámites</Span> relacionados
                 con el departamento de{" "}
                 <Span style={{ fontWeight: 600 }}>
-                  Administración de Recursos Humanos
+                  gestoristración de Recursos Humanos
                 </Span>
                 .
               </Text>
@@ -150,7 +150,7 @@ function PantallaAsistenteVirtual() {
                 }}
               >
                 A partir de ahora puedes gestionar más trámites a través de
-                WhatsApp con el departamento de Administración de Recursos
+                WhatsApp con el departamento de gestoristración de Recursos
                 Humanos:
               </Text>
               <Text

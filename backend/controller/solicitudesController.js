@@ -1,5 +1,5 @@
 // controllers/solicitudesController.js
-const { usuarios: Usuario, administrador: Administrador } = require("../models");
+const { usuarios: Usuario, gestor: gestor } = require("../models");
 const Respuesta = require("../utils/respuesta");
 const { logMensaje } = require("../utils/logger");
 const transporter = require("../config/mail");  // Importa el transportador correctamente
@@ -15,27 +15,27 @@ async function createSolicitud(req, res) {
         .json(Respuesta.error(null, "Faltan datos obligatorios"));
     }
 
-    // Buscar usuario y admin
+    // Buscar usuario y gestor
     const user = await Usuario.findOne({ where: { nif } });
     if (!user) {
       return res.status(404).json(Respuesta.error(null, "Usuario no encontrado"));
     }
 
-    const admin = await Administrador.findOne({
-      where: { Idadministrador: user.id_administrador },
+    const gestor = await gestor.findOne({
+      where: { Idgestor: user.id_gestor },
     });
-    if (!admin) {
-      return res.status(404).json(Respuesta.error(null, "Administrador no encontrado"));
+    if (!gestor) {
+      return res.status(404).json(Respuesta.error(null, "gestor no encontrado"));
     }
 
     // Opciones de correo
     const mailOptions = {
       from: `"MiAcciona Notificaciones" <${process.env.SMTP_USER}>`,
-      to: admin.email,  // Correo del admin asignado
+      to: gestor.email,  // Correo del gestor asignado
       replyTo: user.email,  // El email del usuario que hizo la solicitud
       subject: `Solicitud de ausencia de ${user.nombre}`,
       html: `
-        <p>Hola ${admin.nombre},</p>
+        <p>Hola ${gestor.nombre},</p>
         <p>El usuario <strong>${user.nombre} ${user.primer_apellido}</strong> 
         (NIF: ${user.nif}) solicita ausencia:</p>
         <ul>

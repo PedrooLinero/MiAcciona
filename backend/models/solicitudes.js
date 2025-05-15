@@ -12,7 +12,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    administrador_id: {
+    gestor_id: {
       type: DataTypes.INTEGER,
       allowNull: false
     },

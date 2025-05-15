@@ -14,7 +14,7 @@ router.post("/logout", usuarioController.logout);
 // Ruta para obtener todos los usuarios (con verificación de token y rol)
 router.get(
   "/usuarios",
-  /*verifyToken, verificarRol(["ADMIN"]),*/ usuarioController.getAllUsers
+  /*verifyToken, verificarRol(["gestor"]),*/ usuarioController.getAllUsers
 );
 
 // Ruta para obtener un usuario por MIF
@@ -24,4 +24,6 @@ router.get("/usuarios/:nif", usuarioController.getUserByNif);
 router.put("/usuario/:nif", usuarioController.updateBiometricUser);
 
 router.post("/solicitudes", usuarioController.crearSolicitud);
+
+router.get("/solicitudes/:nif", usuarioController.getSolicitudesPorUsuario)
 module.exports = router;

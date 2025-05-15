@@ -87,7 +87,7 @@ function TipoAusenciaController() {
           `${usuario.primer_apellido} ${usuario.segundo_apellido || ""}`.trim(),
         nif: usuario.nif,
         email: usuario.email,
-        id_administrador: usuario.id_administrador,
+        id_gestor: usuario.id_gestor,
         dias_por_tipo: diasPorTipo,
       };
 

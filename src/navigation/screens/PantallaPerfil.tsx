@@ -79,7 +79,7 @@ export default function PantallaPerfil() {
         const json = await res.json();
         const datos = json.datos ?? json.data ?? json;
         setUser(datos);
-        setChecked(datos.activo_biometria);
+        setChecked(Boolean(datos.activo_biometria));
       } catch (err) {
         console.error("Error cargando datos de usuario:", err);
       } finally {
@@ -98,8 +98,8 @@ export default function PantallaPerfil() {
     );
   }
 
-  const handleChange = async (event) => {
-    setChecked(event);
+  const handleChange = async (event: any) => {
+    setChecked(Boolean(event));
 
     console.log("Entra en el handleChange");
 

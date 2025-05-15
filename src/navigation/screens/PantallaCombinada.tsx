@@ -139,24 +139,43 @@ function PantallaCombinada() {
       playErrorSound();
       return;
     }
+
     setIsLoading(true);
+
     try {
-      const resp = await fetch("http://localhost:3001/api/login", {
+      // Primero intentar login como usuario regular
+      let resp = await fetch("http://localhost:3001/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nif, password }),
       });
-      const data = await resp.json();
-      if (resp.ok) {
-        await AsyncStorage.setItem("usuarioId", data.datos.id.toString());
-        await AsyncStorage.setItem("nif", nif);
+      let data = await resp.json();
 
+      // Si el login de usuario falla, intentar como gestor
+      if (!resp.ok) {
+        resp = await fetch("http://localhost:3001/api/gestor/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nif, password }),
+        });
+        data = await resp.json();
+      }
+
+      if (resp.ok) {
+        // Almacenar datos en AsyncStorage
+        await AsyncStorage.setItem("token", data.datos.token || ""); // Si el backend devuelve token
+        await AsyncStorage.setItem("nif", nif);
+        await AsyncStorage.setItem("rol", data.datos.rol || "");
+        await AsyncStorage.setItem("id", data.datos.id.toString() || "");
+
+        // Actualizar estado local
         setUserData({
           id: data.datos.id,
           nombre: data.datos.nombre,
           primer_apellido: data.datos.primer_apellido,
           rol: data.datos.rol,
         });
+
         setWelcomeMessage(
           `¡Bienvenido, ${data.datos.nombre} ${data.datos.primer_apellido}!`
         );

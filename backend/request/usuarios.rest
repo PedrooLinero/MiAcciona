@@ -34,3 +34,7 @@ Content-Type: application/json
   "fechaInicio": "2025-07-01",
   "fechaFin": "2025-07-15"
 }
+
+### obtener solicitudes del usuario
+
+GET http://localhost:3001/api/solicitudes/12345678Z

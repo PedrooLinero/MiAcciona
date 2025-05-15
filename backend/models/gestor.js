@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  const Administrador = sequelize.define('administrador', {
-    Idadministrador: {
+  const gestor = sequelize.define('gestor', {
+    Idgestor: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -65,14 +65,14 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     sequelize,
-    tableName: 'administrador',
+    tableName: 'gestor',
     timestamps: false,
     indexes: [
       {
         name: "PRIMARY",
         unique: true,
         using: "BTREE",
-        fields: [{ name: "Idadministrador" }]
+        fields: [{ name: "Idgestor" }]
       },
       {
         name: "nif",
@@ -88,9 +88,9 @@ module.exports = function(sequelize, DataTypes) {
     ]
   });
 
-  Administrador.associate = function(models) {
-    Administrador.hasMany(models.usuarios, { foreignKey: 'id_administrador', as: 'usuarios' });
+  gestor.associate = function(models) {
+    gestor.hasMany(models.usuarios, { foreignKey: 'id_gestor', as: 'usuarios' });
   };
 
-  return Administrador;
+  return gestor;
 };

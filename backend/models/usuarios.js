@@ -63,7 +63,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(100),
       allowNull: true
     },
-    id_administrador: {
+    id_gestor: {
       type: DataTypes.INTEGER,
       allowNull: true
     }
@@ -90,16 +90,16 @@ module.exports = function(sequelize, DataTypes) {
         fields: [{ name: "email" }]
       },
       {
-        name: "idx_administrador",
+        name: "idx_gestor",
         using: "BTREE",
-        fields: [{ name: "id_administrador" }]
+        fields: [{ name: "id_gestor" }]
       }
     ]
   });
 
   Usuarios.associate = function(models) {
     Usuarios.hasMany(models.usuario_ausencia, { foreignKey: 'id_usuario', as: 'ausencias' });
-    Usuarios.belongsTo(models.administrador, { foreignKey: 'id_administrador', as: 'administrador' });
+    Usuarios.belongsTo(models.gestor, { foreignKey: 'id_gestor', as: 'gestor' });
   };
 
   return Usuarios;

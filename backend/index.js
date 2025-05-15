@@ -8,7 +8,7 @@ const cookieParser = require("cookie-parser");
 // Rutas
 const usuarioRoutes = require("./routes/usuarioRoutes");
 const tipoAusenciaRoutes = require("./routes/tipoAusenciaRoutes");
-const administradorRoutes = require("./routes/administradorRoutes"); // Añadido
+const gestorRoutes = require("./routes/gestorRoutes"); // Añadido
 const solicitudesRoutes = require('./routes/solicitudesRoutes');
 
 
@@ -44,7 +44,7 @@ app.get('/api/usuarios/:nif/ausencias', (req, res) => {
 // Rutas de la API Rest
 app.use("/api", usuarioRoutes);
 app.use("/api/tipoAusencia", tipoAusenciaRoutes);
-app.use("/api", administradorRoutes); // Añadido
+app.use("/api", gestorRoutes); // Añadido
 app.use('/api/solicitudes', solicitudesRoutes);
 
 

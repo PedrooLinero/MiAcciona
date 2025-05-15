@@ -138,7 +138,7 @@ function UsuarioController() {
           "token_huella",
           "activo_biometria",
           "subdivision_personal",
-          "id_administrador",
+          "id_gestor",
         ],
         include: [
           {
@@ -240,15 +240,12 @@ function UsuarioController() {
           .json(Respuesta.error(null, "Usuario no encontrado"));
       }
 
-      // Verificar que el usuario tenga un administrador asignado
-      if (!usuario.id_administrador) {
+      // Verificar que el usuario tenga un gestor asignado
+      if (!usuario.id_gestor) {
         return res
           .status(400)
           .json(
-            Respuesta.error(
-              null,
-              "El usuario no tiene un administrador asignado"
-            )
+            Respuesta.error(null, "El usuario no tiene un gestor asignado")
           );
       }
 
@@ -294,7 +291,7 @@ function UsuarioController() {
       // Crear la solicitud
       console.log("Datos para crear solicitud:", {
         usuario_id: usuario.Idusuario,
-        administrador_id: usuario.id_administrador,
+        gestor_id: usuario.id_gestor,
         tipo_ausencia_id: id_tipo,
         titulo,
         descripcion,
@@ -305,7 +302,7 @@ function UsuarioController() {
 
       const solicitud = await models.solicitudes.create({
         usuario_id: usuario.Idusuario,
-        administrador_id: usuario.id_administrador,
+        gestor_id: usuario.id_gestor,
         tipo_ausencia_id: id_tipo,
         titulo,
         descripcion,
@@ -324,6 +321,50 @@ function UsuarioController() {
         .json(
           Respuesta.error(null, "Error interno del servidor: " + error.message)
         );
+    }
+  };
+
+  // GET /api/solicitudes?nif=12345678Z
+  this.getSolicitudesPorUsuario = async (req, res) => {
+    const nif = req.params.nif;
+    try {
+      if (!nif) {
+        return res
+          .status(400)
+          .json(Respuesta.error(null, "Falta el parámetro nif"));
+      }
+
+      // Buscar usuario
+      const usuario = await models.usuarios.findOne({ where: { nif } });
+      if (!usuario) {
+        return res
+          .status(404)
+          .json(Respuesta.error(null, "Usuario no encontrado"));
+      }
+
+      // Buscar sus solicitudes
+      const solicitudes = await models.solicitudes.findAll({
+        where: { usuario_id: usuario.Idusuario },
+        include: [
+          {
+            model: models.tipoAusencia,
+            as: "tipo_ausencia",
+            attributes: ["nombre"],
+          },
+        ],
+        order: [["created_at", "DESC"]],
+      });
+
+      return res
+        .status(200)
+        .json(
+          Respuesta.exito(solicitudes, "Solicitudes del usuario obtenidas")
+        );
+    } catch (error) {
+      logMensaje("Error al obtener solicitudes de usuario: " + error, "error");
+      return res
+        .status(500)
+        .json(Respuesta.error(null, "Error interno del servidor"));
     }
   };
 }

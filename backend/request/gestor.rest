@@ -1,0 +1,21 @@
+POST http://localhost:3001/api/gestor/login
+Content-Type: application/json
+
+{
+  "nif": "11122233A",
+  "password": "11122233A"
+}
+
+###logout
+POST http://localhost:3001/api/gestor/logout
+Content-Type: application/json
+
+{
+  "nif": "11122233A"
+}
+
+### get gestor by id
+GET http://localhost:3001/api/gestor/1
+
+### 
+GET http://localhost:3001/api/gestor/solicitudes/2
