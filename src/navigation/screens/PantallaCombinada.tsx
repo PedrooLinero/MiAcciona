@@ -151,7 +151,7 @@ function PantallaCombinada() {
       });
       let data = await resp.json();
 
-      // Si el login de usuario falla, intentar como gestor
+      // Si el login de usuario falla, intentar como gertor
       if (!resp.ok) {
         resp = await fetch("http://localhost:3001/api/gestor/login", {
           method: "POST",
@@ -404,6 +404,7 @@ function PantallaCombinada() {
               <Appbar.Action
                 icon="bell" // Icono de campana
                 color="white"
+                // SI FUNCIONA AUNQUE APAREZCA EN ROJO
                 onPress={() => navigation.navigate("PantallaSolicitud")}
               />
               <Appbar.Action

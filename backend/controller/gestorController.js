@@ -310,7 +310,40 @@ function gestorController() {
     }
   };
 
-  
+  /**
+   * PATCH /api/gestor/solicitudes/:id_solicitud
+   * Body: { estado: "aceptada" | "rechazada" }
+   */
+  this.actualizarEstadoSolicitud = async (req, res) => {
+    const id = parseInt(req.params.id_solicitud, 10);
+    const { estado } = req.body;
+
+    if (!["aceptada", "rechazada"].includes(estado)) {
+      return res.status(400).json(Respuesta.error(null, "Estado inválido"));
+    }
+
+    try {
+      const solicitud = await models.solicitudes.findByPk(id);
+      if (!solicitud) {
+        return res
+          .status(404)
+          .json(Respuesta.error(null, "Solicitud no encontrada"));
+      }
+      // Opcional: verificar que solicitud.gestor_id === req.user.sub (si usas middleware)
+
+      solicitud.estado = estado;
+      await solicitud.save();
+
+      return res
+        .status(200)
+        .json(Respuesta.exito(solicitud, `Solicitud ${estado} correctamente`));
+    } catch (err) {
+      logMensaje("Error actualizando estado: " + err.message, "error");
+      return res
+        .status(500)
+        .json(Respuesta.error(null, "Error interno del servidor"));
+    }
+  };
 }
 
 module.exports = new gestorController();
