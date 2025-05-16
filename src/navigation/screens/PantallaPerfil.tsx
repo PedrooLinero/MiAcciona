@@ -16,7 +16,13 @@ import { Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
-import { Switch, Alert, AlertIcon, AlertText, CheckCircleIcon } from "@gluestack-ui/themed";
+import {
+  Switch,
+  Alert,
+  AlertIcon,
+  AlertText,
+  CheckCircleIcon,
+} from "@gluestack-ui/themed";
 import { MaterialIcons } from "@expo/vector-icons";
 
 const customTheme = {
@@ -73,15 +79,29 @@ export default function PantallaPerfil() {
         const nif = await AsyncStorage.getItem("nif");
         if (!nif) throw new Error("No se encontró NIF en almacenamiento");
 
-        const res = await fetch(`http://localhost:3001/api/usuarios/${nif}`, {
+        // Intentar obtener datos de usuario
+        let res = await fetch(`http://localhost:3001/api/usuarios/${nif}`, {
           credentials: "include",
         });
+
+        if (res.status === 404) {
+          // Si no existe usuario, intentar obtener datos de gestor
+          res = await fetch(`http://localhost:3001/api/gestor/nif/${nif}`, {
+            credentials: "include",
+          });
+
+          if (res.status === 404) {
+            throw new Error("No se encontró usuario ni gestor con ese NIF");
+          }
+        }
+
         const json = await res.json();
         const datos = json.datos ?? json.data ?? json;
         setUser(datos);
         setChecked(Boolean(datos.activo_biometria));
       } catch (err) {
-        console.error("Error cargando datos de usuario:", err);
+        console.error("Error cargando datos:", err);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -147,14 +167,11 @@ export default function PantallaPerfil() {
               titleStyle={styles.title}
               style={{ marginLeft: 0 }}
             />
-            <Text style={styles.diasPermitidos}>
-              Días restantes: {user.diasPermitidos ?? "N/A"}
-            </Text>
           </Appbar.Header>
 
           {alertMessage && (
             <Alert action="success" variant="solid">
-              <AlertIcon as={CheckCircleIcon} style={{marginRight: 5}} />
+              <AlertIcon as={CheckCircleIcon} style={{ marginRight: 5 }} />
               <AlertText>{alertMessage}</AlertText>
             </Alert>
           )}

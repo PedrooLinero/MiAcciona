@@ -266,6 +266,13 @@ ALTER TABLE `usuario_ausencia`
   ADD CONSTRAINT `usuario_ausencia_ibfk_2` FOREIGN KEY (`id_tipo`) REFERENCES `tipo_ausencia` (`id_tipo`) ON DELETE RESTRICT;
 COMMIT;
 
+--
+-- Añadir motivo a la tabla de solicitudes
+--
+
+ALTER TABLE `solicitudes` ADD COLUMN `motivo` VARCHAR(255) NULL DEFAULT NULL AFTER `estado`;
+
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

@@ -124,6 +124,7 @@ function gestorController() {
           .status(400)
           .json(Respuesta.error(null, "El NIF es obligatorio"));
       }
+
       const gestorEncontrado = await gestor.findOne({
         where: { nif },
         attributes: [
@@ -156,16 +157,15 @@ function gestorController() {
           },
         ],
       });
+
       if (!gestorEncontrado) {
         return res
           .status(404)
-          .json(Respuesta.error(null, "gestor no encontrado"));
+          .json(Respuesta.error(null, "Gestor no encontrado"));
       }
 
-      // Transformar los datos para un formato más amigable
-      const gestorData = {
-        ...gestor.get({ plain: true }),
-      };
+      // Transformar los datos a un formato más limpio
+      const gestorData = gestorEncontrado.get({ plain: true });
 
       return res.status(200).json(Respuesta.exito(gestorData));
     } catch (err) {
@@ -314,12 +314,24 @@ function gestorController() {
    * PATCH /api/gestor/solicitudes/:id_solicitud
    * Body: { estado: "aceptada" | "rechazada" }
    */
+  /**
+   * PATCH /api/gestor/solicitudes/:id_solicitud
+   * Body: { estado: "aceptada" | "rechazada", motivo?: string }
+   */
   this.actualizarEstadoSolicitud = async (req, res) => {
     const id = parseInt(req.params.id_solicitud, 10);
-    const { estado } = req.body;
+    const { estado, motivo } = req.body;
 
+    // Validación básica de estado
     if (!["aceptada", "rechazada"].includes(estado)) {
       return res.status(400).json(Respuesta.error(null, "Estado inválido"));
+    }
+
+    // Si rechaza, el motivo es obligatorio
+    if (estado === "rechazada" && (!motivo || motivo.trim() === "")) {
+      return res
+        .status(400)
+        .json(Respuesta.error(null, "Debe especificar un motivo al rechazar"));
     }
 
     try {
@@ -329,14 +341,27 @@ function gestorController() {
           .status(404)
           .json(Respuesta.error(null, "Solicitud no encontrada"));
       }
-      // Opcional: verificar que solicitud.gestor_id === req.user.sub (si usas middleware)
 
+      // Actualizamos estado y, si viene, motivo
       solicitud.estado = estado;
+      if (estado === "rechazada") {
+        solicitud.motivo = motivo.trim();
+      } else {
+        // Opcional: limpiar motivo si fue rechazada antes y ahora se acepta
+        solicitud.motivo = null;
+      }
+
       await solicitud.save();
 
       return res
         .status(200)
-        .json(Respuesta.exito(solicitud, `Solicitud ${estado} correctamente`));
+        .json(
+          Respuesta.exito(
+            solicitud,
+            `Solicitud ${estado} correctamente` +
+              (estado === "rechazada" ? ` (motivo: "${solicitud.motivo}")` : "")
+          )
+        );
     } catch (err) {
       logMensaje("Error actualizando estado: " + err.message, "error");
       return res

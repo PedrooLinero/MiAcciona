@@ -6,8 +6,9 @@ import {
   ActivityIndicator,
   Text,
   View,
-  Image,
   TouchableOpacity,
+  Modal,
+  TextInput as RNTextInput,
 } from "react-native";
 import { Appbar, Provider as PaperProvider, Button } from "react-native-paper";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -32,7 +33,6 @@ type RootStackParamList = {
   PantallaPerfil: undefined;
   PantallaSolicitud: undefined;
 };
-
 type SolicitudScreenProp = StackNavigationProp<
   RootStackParamList,
   "PantallaSolicitud"
@@ -44,7 +44,7 @@ interface Solicitud {
   gestor_id: number;
   tipo_ausencia_id: number;
   titulo: string;
-  descripcion: string | null;
+  descripcion?: string;
   fecha_inicio: string;
   fecha_fin: string;
   estado: "pendiente" | "aceptada" | "rechazada";
@@ -55,40 +55,31 @@ interface Solicitud {
     email: string;
     nif: string;
   };
-  tipo_ausencia?: {
-    nombre: string;
-  };
+  tipo_ausencia?: { nombre: string };
+  motivo?: string;
 }
 
-const EstadoIndicator = ({
-  estado,
-}: {
-  estado: "pendiente" | "aceptada" | "rechazada";
-}) => {
+const EstadoIndicator = ({ estado }: { estado: Solicitud["estado"] }) => {
   switch (estado) {
     case "aceptada":
       return (
         <View style={styles.estadoBox}>
-          <View style={styles.estadoIconContainer}>
-            <MaterialCommunityIcons
-              name="check-circle"
-              size={16}
-              color="#2E7D32"
-            />
-          </View>
+          <MaterialCommunityIcons
+            name="check-circle"
+            size={16}
+            color="#2E7D32"
+          />
           <Text style={[styles.estadoText, styles.aceptadaText]}>ACEPTADA</Text>
         </View>
       );
     case "rechazada":
       return (
         <View style={styles.estadoBox}>
-          <View style={styles.estadoIconContainer}>
-            <MaterialCommunityIcons
-              name="close-circle"
-              size={16}
-              color="#D32F2F"
-            />
-          </View>
+          <MaterialCommunityIcons
+            name="close-circle"
+            size={16}
+            color="#D32F2F"
+          />
           <Text style={[styles.estadoText, styles.rechazadaText]}>
             RECHAZADA
           </Text>
@@ -97,13 +88,11 @@ const EstadoIndicator = ({
     default:
       return (
         <View style={styles.estadoBox}>
-          <View style={styles.estadoIconContainer}>
-            <MaterialCommunityIcons
-              name="clock-outline"
-              size={16}
-              color="#FF9800"
-            />
-          </View>
+          <MaterialCommunityIcons
+            name="clock-outline"
+            size={16}
+            color="#FF9800"
+          />
           <Text style={[styles.estadoText, styles.pendienteText]}>
             PENDIENTE
           </Text>
@@ -112,109 +101,43 @@ const EstadoIndicator = ({
   }
 };
 
-const PantallaSolicitud: React.FC = () => {
+export default function PantallaSolicitud() {
   const navigation = useNavigation<SolicitudScreenProp>();
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGestor, setIsGestor] = useState(false);
 
+  // Modal de motivo
+  const [modalVisible, setModalVisible] = useState(false);
+  const [motivoText, setMotivoText] = useState("");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
   useEffect(() => {
-    const fetchSolicitudes = async () => {
+    (async () => {
+      const nif = await AsyncStorage.getItem("nif");
+      const rol = await AsyncStorage.getItem("rol");
+      const id = await AsyncStorage.getItem("id");
+      const gestorRole = rol?.toLowerCase() === "gestor";
+      setIsGestor(gestorRole);
+
+      const url = gestorRole
+        ? `http://localhost:3001/api/gestor/solicitudes/${parseInt(id!, 10)}`
+        : `http://localhost:3001/api/solicitudes/${nif}`;
+
       try {
-        const nif = await AsyncStorage.getItem("nif");
-        const rol = await AsyncStorage.getItem("rol");
-        const id = await AsyncStorage.getItem("id");
-
-        console.log("🔍 Storage:", { nif, rol, id });
-
-        if (!nif || !rol) {
-          console.warn("⚠️ Falta nif o rol en storage, no se hará fetch");
-          setSolicitudes([]);
-          return;
-        }
-
-        const gestor = rol.toLowerCase() === "gestor";
-        setIsGestor(gestor);
-
-        const url = gestor
-          ? `http://localhost:3001/api/gestor/solicitudes/${parseInt(id!, 10)}`
-          : `http://localhost:3001/api/solicitudes/${nif}`;
-
         const res = await fetch(url, { credentials: "include" });
         const json = await res.json();
-        console.log("✅ Respuesta fetch:", json);
         setSolicitudes(json.datos || []);
-      } catch (err) {
-        console.error("Error cargando solicitudes:", err);
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchSolicitudes();
+    })();
   }, []);
 
-  const aceptarSolicitud = async (id_solicitud: number) => {
-    try {
-      const res = await fetch(
-        `http://localhost:3001/api/gestor/solicitudes/${id_solicitud}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ estado: "aceptada" }),
-        }
-      );
-      const json = await res.json();
-      if (json.ok) {
-        setSolicitudes((prev) =>
-          prev.map((s) =>
-            s.id_solicitud === id_solicitud ? { ...s, estado: "aceptada" } : s
-          )
-        );
-      }
-    } catch (err) {
-      console.error("Error aceptando solicitud:", err);
-    }
-  };
-
-  const rechazarSolicitud = async (id_solicitud: number) => {
-    try {
-      const res = await fetch(
-        `http://localhost:3001/api/gestor/solicitudes/${id_solicitud}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ estado: "rechazada" }),
-        }
-      );
-      const json = await res.json();
-      if (json.ok) {
-        setSolicitudes((prev) =>
-          prev.map((s) =>
-            s.id_solicitud === id_solicitud ? { ...s, estado: "rechazada" } : s
-          )
-        );
-      }
-    } catch (err) {
-      console.error("Error rechazando solicitud:", err);
-    }
-  };
-
-  const handleEditarSolicitud = (id_solicitud: number) => {
-    // Lógica de edición futura
-    console.log("Editar solicitud:", id_solicitud);
-  };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#D50032" />
-      </SafeAreaView>
-    );
-  }
-
-  const formatDate = (dateString: string | number | Date) => {
-    const date = new Date(dateString);
+  const formatDate = (d: string) => {
+    const date = new Date(d);
     const day = date.getDate();
     const monthNames = [
       "ene",
@@ -230,10 +153,67 @@ const PantallaSolicitud: React.FC = () => {
       "nov",
       "dic",
     ];
-    const month = monthNames[date.getMonth()];
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
+    return `${day} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
   };
+
+  const openRejectModal = (id: number) => {
+    setSelectedId(id);
+    setMotivoText("");
+    setModalVisible(true);
+  };
+
+  const confirmReject = async () => {
+    if (selectedId == null) return;
+    try {
+      await fetch(
+        `http://localhost:3001/api/gestor/solicitudes/${selectedId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            estado: "rechazada",
+            motivo: motivoText.trim(),
+          }),
+        }
+      );
+      setSolicitudes((prev) =>
+        prev.map((s) =>
+          s.id_solicitud === selectedId
+            ? { ...s, estado: "rechazada", motivo: motivoText.trim() }
+            : s
+        )
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setModalVisible(false);
+    }
+  };
+
+  const aceptarSolicitud = async (id: number) => {
+    try {
+      await fetch(`http://localhost:3001/api/gestor/solicitudes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: "aceptada" }),
+      });
+      setSolicitudes((prev) =>
+        prev.map((s) =>
+          s.id_solicitud === id ? { ...s, estado: "aceptada" } : s
+        )
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.centered}>
+        <ActivityIndicator size="large" color="#D50032" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <PaperProvider theme={customTheme}>
@@ -247,14 +227,10 @@ const PantallaSolicitud: React.FC = () => {
           <Appbar.Content
             title={isGestor ? "Solicitudes de Usuarios" : "Mis Solicitudes"}
             titleStyle={styles.title}
-            style={{ marginLeft: 0 }}
           />
         </Appbar.Header>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           {solicitudes.length === 0 ? (
             <Text style={styles.noSolicitudes}>
               {isGestor
@@ -265,9 +241,7 @@ const PantallaSolicitud: React.FC = () => {
             solicitudes.map((s) => (
               <View key={s.id_solicitud} style={styles.solicitudCard}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>
-                    {s.titulo || "SOLICITUD"}
-                  </Text>
+                  <Text style={styles.cardTitle}>{s.titulo}</Text>
                   <EstadoIndicator estado={s.estado} />
                 </View>
 
@@ -276,121 +250,124 @@ const PantallaSolicitud: React.FC = () => {
                 )}
 
                 <View style={styles.infoContainer}>
-                  {/* Primera fila: Solicitado por y Tipo de ausencia */}
                   <View style={styles.infoRow}>
                     <View style={{ flex: 4 }}>
                       <Text style={styles.labelText}>Solicitado por:</Text>
                       <Text style={styles.valueText}>
                         {s.usuario
                           ? `${s.usuario.nombre} ${s.usuario.primer_apellido}`
-                          : "Usuario"}
+                          : ""}
                       </Text>
                     </View>
                     <View style={{ flex: 2 }}>
-                      <Text style={styles.labelText}>Tipo de ausencia:</Text>
+                      <Text style={styles.labelText}>Tipo:</Text>
                       <Text style={styles.valueText}>
-                        {s.tipo_ausencia?.nombre || "-"}
+                        {s.tipo_ausencia?.nombre || ""}
                       </Text>
                     </View>
                   </View>
 
-                  {/* Segunda fila: Fecha de envío, Fecha inicio, Fecha fin */}
                   <View style={styles.dateRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.labelText}>Fecha de envío:</Text>
-                      <Text style={styles.valueText}>
+                    <View style={styles.dateItem}>
+                      <Text style={styles.dateLabel}>Env:</Text>
+                      <Text style={styles.dateValue}>
                         {formatDate(s.created_at)}
                       </Text>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.labelText}>Fecha inicio:</Text>
-                      <Text style={styles.valueText}>
+                    <View style={styles.dateItem}>
+                      <Text style={styles.dateLabel}>Inicio:</Text>
+                      <Text style={styles.dateValue}>
                         {formatDate(s.fecha_inicio)}
                       </Text>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.labelText}>Fecha fin:</Text>
-                      <Text style={styles.valueText}>
+                    <View style={styles.dateItem}>
+                      <Text style={styles.dateLabel}>Fin:</Text>
+                      <Text style={styles.dateValue}>
                         {formatDate(s.fecha_fin)}
                       </Text>
                     </View>
                   </View>
 
-                  {/* Botón editar solo para gestor cuando el estado es "rechazada" */}
-                  {isGestor && s.estado === "rechazada" && (
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() => handleEditarSolicitud(s.id_solicitud)}
-                    >
-                      <MaterialCommunityIcons
-                        name="pencil"
-                        size={20}
-                        color="#FFF"
-                      />
-                      <Text style={styles.editButtonText}>Editar</Text>
-                    </TouchableOpacity>
+                  {s.motivo && (
+                    <View style={styles.motivoContainer}>
+                      <Text style={styles.labelText}>Motivo:</Text>
+                      <Text style={styles.valueText}>{s.motivo}</Text>
+                    </View>
+                  )}
+
+                  {isGestor && s.estado === "pendiente" && (
+                    <View style={styles.buttonContainer}>
+                      <Button
+                        mode="contained"
+                        onPress={() => aceptarSolicitud(s.id_solicitud)}
+                        style={styles.acceptButton}
+                        labelStyle={styles.buttonLabel}
+                      >
+                        ACEPTAR
+                      </Button>
+                      <Button
+                        mode="contained"
+                        onPress={() => openRejectModal(s.id_solicitud)}
+                        style={styles.rejectButton}
+                        labelStyle={styles.buttonLabel}
+                      >
+                        RECHAZAR
+                      </Button>
+                    </View>
                   )}
                 </View>
-
-                {isGestor && s.estado === "pendiente" && (
-                  <View style={styles.buttonContainer}>
-                    <Button
-                      mode="contained"
-                      onPress={() => aceptarSolicitud(s.id_solicitud)}
-                      style={styles.acceptButton}
-                      labelStyle={styles.buttonLabel}
-                    >
-                      ACEPTAR
-                    </Button>
-                    <Button
-                      mode="contained"
-                      onPress={() => rechazarSolicitud(s.id_solicitud)}
-                      style={styles.rejectButton}
-                      labelStyle={styles.buttonLabel}
-                    >
-                      RECHAZAR
-                    </Button>
-                  </View>
-                )}
               </View>
             ))
           )}
         </ScrollView>
+
+        {/* Modal personalizado */}
+        <Modal
+          transparent
+          animationType="fade"
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.overlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Rechazo de solicitud</Text>
+              <Text style={styles.modalLabel}>Motivo:</Text>
+              <RNTextInput
+                style={styles.modalInput}
+                placeholder="Escriba el motivo del rechazo de la solicitud"
+                multiline
+                value={motivoText}
+                onChangeText={setMotivoText}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  style={[styles.modalButton, styles.cancelButton]}
+                >
+                  <Text style={styles.cancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={confirmReject}
+                  style={[styles.modalButton, styles.modalAcceptButton]}
+                  disabled={!motivoText.trim()}
+                >
+                  <Text style={styles.acceptText}>Aceptar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </PaperProvider>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F5F5",
-  },
-  appbar: {
-    backgroundColor: "#D50032",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingRight: 16,
-    width: "100%",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  container: { flex: 1, backgroundColor: "#F5F5F5" },
+  appbar: { backgroundColor: "#D50032" },
+  title: { fontSize: 20, fontWeight: "bold", color: "white" },
+  scrollContent: { padding: 12 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   noSolicitudes: {
     fontSize: 16,
     color: "#666",
@@ -413,32 +390,22 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 8,
-    position: "relative",
   },
   estadoBox: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F8F8F8",
     borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  estadoIconContainer: {
-    marginRight: 4,
+    padding: 4,
   },
   estadoText: {
+    marginLeft: 4,
     fontWeight: "bold",
     fontSize: 12,
   },
-  aceptadaText: {
-    color: "#2E7D32",
-  },
-  rechazadaText: {
-    color: "#D32F2F",
-  },
-  pendienteText: {
-    color: "#FF9800",
-  },
+  aceptadaText: { color: "#2E7D32" },
+  rechazadaText: { color: "#D32F2F" },
+  pendienteText: { color: "#FF9800" },
   cardTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -451,9 +418,7 @@ const styles = StyleSheet.create({
     color: "#555555",
     marginBottom: 16,
   },
-  infoContainer: {
-    marginTop: 6,
-  },
+  infoContainer: { marginTop: 6 },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -464,41 +429,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 10,
   },
-  dateItem: {
-    flex: 1,
-  },
-  submitRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 6,
-  },
-  submitDateBox: {
-    flex: 1,
-  },
-  labelText: {
-    fontSize: 12,
-    color: "#666666",
-    marginBottom: 2,
-  },
-  valueText: {
-    fontSize: 14,
-    color: "#333333",
-    fontWeight: "500",
-  },
-  editButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#D50032",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  editButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
-    marginLeft: 4,
+  dateItem: { flex: 1 },
+  dateLabel: { fontSize: 12, color: "#666" },
+  dateValue: { fontSize: 14, color: "#333", fontWeight: "500" },
+  labelText: { fontSize: 12, color: "#666", marginBottom: 2 },
+  valueText: { fontSize: 14, color: "#333333", fontWeight: "500" },
+  motivoContainer: {
+    marginTop: 10,
+    padding: 8,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 6,
   },
   buttonContainer: {
     flexDirection: "row",
@@ -517,11 +457,53 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#D32F2F",
   },
-  buttonLabel: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-});
+  buttonLabel: { color: "#FFFFFF", fontWeight: "bold" },
 
-export default PantallaSolicitud;
+  // estilos del modal
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCard: {
+    width: "80%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  modalLabel: {
+    fontSize: 14,
+    marginBottom: 8,
+    
+  },
+  modalInput: {
+    height: 100,
+    borderWidth: 1,
+    borderColor: "#CCC",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 16,
+    textAlignVertical: "top",
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  cancelButton: { backgroundColor: "#424242" },
+  modalAcceptButton: { backgroundColor: "#2979FF" },
+  cancelText: { color: "#FFF" },
+  acceptText: { color: "#FFF" },
+});

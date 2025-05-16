@@ -41,6 +41,10 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: 'pendiente'
     },
+    motivo: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,

@@ -19,6 +19,9 @@ Content-Type: application/json
 ### get gestor by id
 GET http://localhost:3001/api/gestor/1
 
+### GESTOR BY NIF
+GET http://localhost:3001/api/gestor/nif/11122233A
+
 ### 
 GET http://localhost:3001/api/gestor/solicitudes/2
 
@@ -39,8 +42,10 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "estado": "rechazada"
+  "estado": "rechazada",
+  "motivo": "Fecha no disponible en mi agenda"
 }
+
 
 
 
